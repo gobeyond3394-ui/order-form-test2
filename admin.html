@@ -313,13 +313,13 @@
 <script>
 
 const API_CONFIG = {
-  gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbyJJeaMI-IaS860-wYxmbrKkZqlDVVW_8eYPtn9fPh5vj6tUK2gPs0Ji0jqpd50q2JAbA/exec',
+  gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbwfPzPeI91I-_MiB6Mt1ZRf0kBdGdl6OHJnIaqw3RdKchHhhSkg9gjLFDFhI5YdUNJjBw/exec',
   shopUrl: './index.html'
 };
 const API = String(API_CONFIG.gasWebAppUrl || '').trim();
 const SHOP_URL = String(API_CONFIG.shopUrl || './index.html').trim();
 const API_BRIDGE_SOURCE = 'SSU_GAS_BRIDGE';
-const API_REQUEST_TIMEOUT_MS = 30000;
+const API_REQUEST_TIMEOUT_MS = 60000;
 const PRODUCT_CACHE_KEY = 'ssu_admin_products_cache_v3';
 const PRODUCT_VERSION_KEY = 'productCatalogVersion';
 const COLOR_PRESETS = [
@@ -966,6 +966,14 @@ function jsonpRequest(url, timeoutMs){
   });
 }
 
+function normalizeBridgeMessageData(value){
+  if (!value) return null;
+  if (typeof value === 'string') {
+    try { value = JSON.parse(value); } catch(e) { return null; }
+  }
+  return (value && typeof value === 'object') ? value : null;
+}
+
 async function postJson(payload){
   ensureApiConfigured();
   const frame = ensureBridgeFrame();
@@ -998,11 +1006,10 @@ async function postJson(payload){
     }
 
     function onMessage(event){
-      const data = event && event.data;
-      if (!data || typeof data !== 'object') return;
+      const data = normalizeBridgeMessageData(event && event.data);
+      if (!data) return;
       if (data.source !== API_BRIDGE_SOURCE) return;
       if (data.requestId !== requestId) return;
-      if (frame.contentWindow && event.source && event.source !== frame.contentWindow) return;
       cleanup();
       resolve(data.response || { ok:false, message:'응답 데이터가 비어 있습니다.' });
     }
