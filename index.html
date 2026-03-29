@@ -807,7 +807,125 @@ body{
   }
 }
 
-  </style>
+  
+
+/* patch 2026-03-29 home icons + image preview */
+.icon-box.talk-box,
+.icon-box.cart-box{
+  width:56px!important;
+  height:56px!important;
+  flex:0 0 56px!important;
+}
+.icon-box.talk-box svg,
+.icon-box.cart-box svg{
+  width:30px!important;
+  height:30px!important;
+}
+.icon-box.cart-box .count-badge{
+  right:-2px!important;
+  top:2px!important;
+}
+.cart-thumb,
+.checkout-thumb,
+.order-item img{
+  cursor:zoom-in;
+}
+.image-preview-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:210;
+  background:rgba(15,23,42,.62);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease;
+}
+.image-preview-backdrop.show{
+  opacity:1;
+  pointer-events:auto;
+}
+.image-preview-modal{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%) scale(.96);
+  width:min(calc(100% - 28px),640px);
+  max-height:calc(100vh - 32px);
+  z-index:211;
+  background:#fff;
+  border-radius:28px;
+  box-shadow:0 24px 52px rgba(15,23,42,.24);
+  padding:14px 14px 16px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.image-preview-modal.show{
+  opacity:1;
+  pointer-events:auto;
+  transform:translate(-50%,-50%) scale(1);
+}
+.image-preview-head{
+  display:flex;
+  justify-content:flex-end;
+}
+.image-preview-close{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:#111827;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  line-height:1;
+}
+.image-preview-body{
+  min-height:0;
+  overflow:auto;
+}
+.image-preview-frame{
+  border-radius:22px;
+  overflow:hidden;
+  background:#f8fafc;
+}
+.image-preview-image{
+  width:100%;
+  height:auto;
+  max-height:72vh;
+  object-fit:contain;
+  margin:0 auto;
+}
+.image-preview-foot .btn{
+  width:100%;
+}
+@media (max-width:520px){
+  .icon-box.talk-box,
+  .icon-box.cart-box{
+    width:52px!important;
+    height:52px!important;
+    flex-basis:52px!important;
+  }
+  .icon-box.talk-box svg,
+  .icon-box.cart-box svg{
+    width:28px!important;
+    height:28px!important;
+  }
+  .image-preview-modal{
+    width:min(calc(100% - 20px),640px);
+    padding:12px 12px 14px;
+    border-radius:24px;
+  }
+  .image-preview-image{
+    max-height:68vh;
+  }
+}
+
+</style>
 </head>
 <body>
   <header class="topbar">
@@ -1138,6 +1256,23 @@ body{
 
   <div class="toast" id="toast"></div>
 
+  <div class="image-preview-backdrop" id="imagePreviewBackdrop"></div>
+  <div class="image-preview-modal" id="imagePreviewModal" role="dialog" aria-modal="true" aria-labelledby="imagePreviewTitle" aria-hidden="true">
+    <div class="image-preview-head">
+      <button type="button" class="image-preview-close" id="imagePreviewCloseBtn" aria-label="닫기">×</button>
+    </div>
+    <div class="image-preview-body">
+      <div class="sr-only" id="imagePreviewTitle">상품 이미지 크게 보기</div>
+      <div class="image-preview-frame">
+        <img class="image-preview-image" id="imagePreviewImage" src="" alt="">
+      </div>
+    </div>
+    <div class="image-preview-foot">
+      <button type="button" class="btn secondary" id="imagePreviewBottomCloseBtn">닫기</button>
+    </div>
+  </div>
+
+
   <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
   <script>
 (() => {
@@ -1270,7 +1405,12 @@ body{
     actionPopupCircle: document.getElementById('actionPopupCircle'),
     actionPopupTitle: document.getElementById('actionPopupTitle'),
     actionPopupText: document.getElementById('actionPopupText'),
-    toast: document.getElementById('toast')
+    toast: document.getElementById('toast'),
+    imagePreviewBackdrop: document.getElementById('imagePreviewBackdrop'),
+    imagePreviewModal: document.getElementById('imagePreviewModal'),
+    imagePreviewImage: document.getElementById('imagePreviewImage'),
+    imagePreviewCloseBtn: document.getElementById('imagePreviewCloseBtn'),
+    imagePreviewBottomCloseBtn: document.getElementById('imagePreviewBottomCloseBtn')
   };
 
   let toastTimer = null;
@@ -2010,6 +2150,10 @@ body{
   }
 
   function closeCurrentOrAll() {
+    if (els.imagePreviewModal && els.imagePreviewModal.classList.contains('show')) {
+      closeImagePreview();
+      return;
+    }
     if (els.confirmModal.classList.contains('show')) {
       closeConfirmDialog(false);
       return;
@@ -3778,6 +3922,57 @@ function injectAccountWarnings() {
 }
 
 
+function openImagePreview(src, alt = '') {
+  const imageSrc = String(src || '').trim();
+  if (!imageSrc || !els.imagePreviewModal || !els.imagePreviewImage || !els.imagePreviewBackdrop) return;
+  els.imagePreviewImage.src = imageSrc;
+  els.imagePreviewImage.alt = String(alt || '상품 이미지');
+  els.imagePreviewBackdrop.classList.add('show');
+  els.imagePreviewModal.classList.add('show');
+  els.imagePreviewModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeImagePreview() {
+  if (!els.imagePreviewModal || !els.imagePreviewBackdrop || !els.imagePreviewImage) return;
+  els.imagePreviewBackdrop.classList.remove('show');
+  els.imagePreviewModal.classList.remove('show');
+  els.imagePreviewModal.setAttribute('aria-hidden', 'true');
+  window.setTimeout(() => {
+    if (!els.imagePreviewModal.classList.contains('show')) {
+      els.imagePreviewImage.removeAttribute('src');
+      els.imagePreviewImage.alt = '';
+    }
+  }, 180);
+}
+
+function bindImagePreviewEvents() {
+  const bindList = (container, selector) => {
+    if (!container) return;
+    container.addEventListener('click', (event) => {
+      const trigger = event.target.closest(selector);
+      if (!trigger) return;
+      const image = trigger.tagName === 'IMG' ? trigger : trigger.querySelector('img');
+      if (!image) return;
+      openImagePreview(image.currentSrc || image.src || '', image.getAttribute('alt') || '');
+    });
+  };
+
+  bindList(els.cartList, '.cart-thumb, .cart-thumb img');
+  bindList(els.checkoutItemList, '.checkout-thumb, .checkout-thumb img');
+  bindList(els.successItemList, '.checkout-thumb, .checkout-thumb img');
+  bindList(els.ordersList, '.order-item img');
+
+  if (els.imagePreviewBackdrop) els.imagePreviewBackdrop.addEventListener('click', closeImagePreview);
+  if (els.imagePreviewCloseBtn) els.imagePreviewCloseBtn.addEventListener('click', closeImagePreview);
+  if (els.imagePreviewBottomCloseBtn) els.imagePreviewBottomCloseBtn.addEventListener('click', closeImagePreview);
+  if (els.imagePreviewModal) {
+    els.imagePreviewModal.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+  }
+}
+
+
 function resetSheetScroll(target) {
   if (!target) return;
   const body = target.querySelector('.sheet-body');
@@ -4380,6 +4575,7 @@ function init() {
   els.productGrid.innerHTML = '<div class="empty-card">상품을 불러오는 중입니다...</div>';
   const cacheReady = hydrateProductCache();
   bindEvents();
+  bindImagePreviewEvents();
   loadProducts(!cacheReady);
   initProductPolling();
 }
