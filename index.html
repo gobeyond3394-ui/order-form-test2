@@ -1334,6 +1334,181 @@ body{
   }
 }
 
+
+/* final patch 2026-03-29 user revisions */
+.brand-copy{
+  gap:8px!important;
+  align-items:baseline!important;
+}
+.brand-wordmark{
+  font-size:21.5px!important;
+}
+.brand-subline{
+  font-size:21.5px!important;
+  line-height:1!important;
+  letter-spacing:.12em!important;
+  padding-bottom:0!important;
+  transform:scaleX(1.04)!important;
+  transform-origin:left center!important;
+}
+.icon-box.cart-box .count-badge{
+  right:3px!important;
+  top:3px!important;
+}
+.social-row{
+  gap:26px!important;
+}
+.social-icon-btn{
+  width:78px!important;
+  height:54px!important;
+  min-height:54px!important;
+  padding:0!important;
+  border-radius:16px!important;
+  border:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  box-shadow:0 8px 18px rgba(15,23,42,.08)!important;
+}
+.social-icon-btn.youtube{
+  background:#ff0033!important;
+}
+.social-icon-btn.tiktok{
+  background:#111827!important;
+  border:0!important;
+}
+.social-youtube-svg{
+  width:72px!important;
+  height:52px!important;
+  display:block!important;
+}
+.social-youtube-svg .youtube-icon-play{
+  transform-origin:center!important;
+}
+.social-tiktok-svg{
+  width:26px!important;
+  height:30px!important;
+  display:block!important;
+  overflow:visible!important;
+}
+.social-tiktok-svg .tiktok-icon-shape{
+  fill:#ffffff!important;
+  filter:drop-shadow(-1.6px -1.2px 0 #25f4ee) drop-shadow(1.6px 1.2px 0 #fe2c55);
+}
+.topbar .icon-box,
+.hero .hero-badge,
+.hero .social-icon-btn,
+.search-card .ghost-btn,
+.search-card .filter-chip,
+.product-grid .product-card,
+.bottom-nav .bottom-nav-btn{
+  transition:transform .14s ease, filter .14s ease, box-shadow .14s ease, opacity .14s ease;
+  will-change:transform;
+}
+.topbar .icon-box.is-pressed,
+.hero .hero-badge.is-pressed,
+.hero .social-icon-btn.is-pressed,
+.search-card .ghost-btn.is-pressed,
+.search-card .filter-chip.is-pressed,
+.bottom-nav .bottom-nav-btn.is-pressed{
+  transform:translateY(2px) scale(.97);
+  filter:brightness(.96);
+}
+.product-grid .product-card.is-pressed{
+  transform:translateY(2px) scale(.985);
+  filter:brightness(.985);
+}
+.product-grid .product-card.is-pressed .product-media{
+  box-shadow:0 4px 12px rgba(15,23,42,.08)!important;
+}
+@media (prefers-reduced-motion: reduce){
+  .topbar .icon-box,
+  .hero .hero-badge,
+  .hero .social-icon-btn,
+  .search-card .ghost-btn,
+  .search-card .filter-chip,
+  .product-grid .product-card,
+  .bottom-nav .bottom-nav-btn{
+    transition:none!important;
+  }
+}
+@media (max-width:520px){
+  .brand-wordmark,
+  .brand-subline{
+    font-size:20px!important;
+  }
+  .social-row{
+    gap:22px!important;
+  }
+  .social-icon-btn{
+    width:74px!important;
+    height:52px!important;
+    min-height:52px!important;
+    border-radius:15px!important;
+  }
+  .social-youtube-svg{
+    width:68px!important;
+    height:48px!important;
+  }
+  .social-tiktok-svg{
+    width:25px!important;
+    height:29px!important;
+  }
+}
+@media (max-width:390px){
+  .brand-copy{
+    gap:7px!important;
+  }
+  .brand-wordmark,
+  .brand-subline{
+    font-size:18px!important;
+  }
+  .social-row{
+    gap:20px!important;
+  }
+  .social-icon-btn{
+    width:70px!important;
+    height:50px!important;
+    min-height:50px!important;
+  }
+  .social-youtube-svg{
+    width:64px!important;
+    height:46px!important;
+  }
+  .social-tiktok-svg{
+    width:24px!important;
+    height:28px!important;
+  }
+}
+
+@media (max-width:350px){
+  .topbar-inner{
+    gap:10px!important;
+  }
+  .brand-copy{
+    gap:6px!important;
+  }
+  .brand-wordmark,
+  .brand-subline{
+    font-size:16.5px!important;
+  }
+  .top-actions{
+    gap:6px!important;
+  }
+  .icon-box.talk-box,
+  .icon-box.cart-box{
+    width:46px!important;
+    height:46px!important;
+    flex-basis:46px!important;
+  }
+  .icon-box.talk-box svg,
+  .icon-box.cart-box svg{
+    width:25px!important;
+    height:25px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1373,14 +1548,15 @@ body{
       <p class="hero-copy">지금 방송 중인 상품을 만나보세요.</p>
       <div class="social-row">
         <button type="button" class="social-icon-btn youtube" id="openYoutubeBtn" aria-label="유튜브 방송보기">
-          <svg viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-            <rect class="youtube-icon-bg" fill="#ff0033" x="2.5" y="7" width="35" height="26" rx="9"></rect>
-            <path class="youtube-icon-play" fill="#ffffff" d="M16.2 14.2 27.1 20l-10.9 5.8V14.2Z"></path>
+          <svg class="social-youtube-svg" viewBox="0 0 72 52" aria-hidden="true" focusable="false">
+            <path class="youtube-icon-play" fill="#ffffff" d="M30.4 17.5 45.9 26 30.4 34.5V17.5Z"></path>
           </svg>
           <span class="sr-only">유튜브 방송보기</span>
         </button>
         <button type="button" class="social-icon-btn tiktok" id="openTiktokBtn" aria-label="틱톡 방송보기">
-          <img class="social-icon-media" src="https://cdn.jsdelivr.net/npm/simple-icons@16.13.0/icons/tiktok.svg" alt="" aria-hidden="true">
+          <svg class="social-tiktok-svg" viewBox="0 0 448 512" aria-hidden="true" focusable="false">
+            <path class="tiktok-icon-shape" d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z"></path>
+          </svg>
           <span class="sr-only">틱톡 방송보기</span>
         </button>
       </div>
@@ -5403,6 +5579,57 @@ function navigateOutOfHome() {
 }
 
 
+function setupHomeButtonPressFeedback() {
+  const pressableSelector = [
+    '.topbar .icon-box',
+    '.hero .hero-badge',
+    '.hero .social-icon-btn',
+    '.search-card .ghost-btn',
+    '.search-card .filter-chip',
+    '.product-grid .product-card',
+    '.bottom-nav .bottom-nav-btn'
+  ].join(',');
+
+  const releasePressed = (target, delay = 0) => {
+    if (!target) return;
+    if (target.__pressFeedbackTimer) {
+      clearTimeout(target.__pressFeedbackTimer);
+    }
+    target.__pressFeedbackTimer = window.setTimeout(() => {
+      target.classList.remove('is-pressed');
+      target.__pressFeedbackTimer = null;
+    }, delay);
+  };
+
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target.closest(pressableSelector);
+    if (!target) return;
+    if (target.__pressFeedbackTimer) {
+      clearTimeout(target.__pressFeedbackTimer);
+      target.__pressFeedbackTimer = null;
+    }
+    target.classList.add('is-pressed');
+  }, true);
+
+  document.addEventListener('pointerup', (event) => {
+    releasePressed(event.target.closest(pressableSelector), 70);
+  }, true);
+
+  document.addEventListener('pointercancel', (event) => {
+    releasePressed(event.target.closest(pressableSelector));
+  }, true);
+
+  document.addEventListener('dragstart', (event) => {
+    releasePressed(event.target.closest(pressableSelector));
+  }, true);
+
+  document.addEventListener('contextmenu', (event) => {
+    releasePressed(event.target.closest(pressableSelector));
+  }, true);
+}
+
+
+  setupHomeButtonPressFeedback();
   init();
   renderBankAccountText();
 })();
