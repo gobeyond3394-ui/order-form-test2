@@ -729,6 +729,84 @@ body{
   }
 }
 
+  
+
+/* request patch 2026-03-29 */
+.small-btn:disabled,
+.small-btn.disabled,
+.small-btn.is-disabled{
+  background:#f3f4f6!important;
+  color:#98a2b3!important;
+  border-color:#e5e7eb!important;
+  box-shadow:none!important;
+  pointer-events:none!important;
+  opacity:1!important;
+}
+.order-item.is-cancelled{
+  opacity:.82;
+}
+.account-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:14px!important;
+}
+.account-copy{
+  min-width:0!important;
+  flex:1 1 auto!important;
+}
+#bankAccountText,
+#successBankText{
+  display:grid!important;
+  gap:2px!important;
+  margin-top:6px!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  word-break:keep-all!important;
+  overflow-wrap:anywhere!important;
+}
+#bankAccountText .account-bank-line,
+#successBankText .account-bank-line{
+  display:block;
+  white-space:nowrap;
+}
+#bankAccountText .account-holder-line,
+#successBankText .account-holder-line{
+  display:block;
+  color:#667085;
+}
+.copy-btn{
+  align-self:center!important;
+  justify-self:center!important;
+  flex:0 0 auto!important;
+}
+.icon-box.talk-box,
+.icon-box.cart-box{
+  width:48px!important;
+  height:48px!important;
+  flex:0 0 48px!important;
+}
+.icon-box.talk-box svg,
+.icon-box.cart-box svg{
+  width:26px!important;
+  height:26px!important;
+}
+@media (max-width:520px){
+  .icon-box.talk-box,
+  .icon-box.cart-box{
+    width:44px!important;
+    height:44px!important;
+    flex-basis:44px!important;
+  }
+  .icon-box.talk-box svg,
+  .icon-box.cart-box svg{
+    width:24px!important;
+    height:24px!important;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -862,8 +940,8 @@ body{
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="19" r="1.7"></circle><circle cx="18" cy="19" r="1.7"></circle><path d="M3 5h11v9H3z"></path><path d="M14 9h3.4l3.1 3.2V14H14z"></path></svg>
             </div>
             <div class="shipping-copy">
-              <div id="detailShippingLine1">배송비 4,000원 당일 10만↑무료배송 제주 +3,000원</div>
-              <div id="detailShippingLine2">영업일 기준 3일 이내 발송</div>
+              <div id="detailShippingLine1">배송비 4,000원 · 당일 10만↑무배 · 제주 +3000원</div>
+              <div id="detailShippingLine2">금~일 주문 합배 · 3영업일 내 발송</div>
             </div>
           </div>
           <div class="selected-divider"></div>
@@ -1085,8 +1163,8 @@ body{
   };
 
   const SHEET_IDS = ['detailSheet', 'cartSheet', 'checkoutSheet', 'ordersSheet', 'profileSheet', 'successSheet'];
-  const SHIPPING_LINE_1 = `배송비 ${Number(CONFIG.shippingFee || 0).toLocaleString('ko-KR')}원 당일 10만↑무료배송 제주 +${Number(CONFIG.jejuExtraFee || 0).toLocaleString('ko-KR')}원`;
-  const SHIPPING_LINE_2 = '영업일 기준 3일 이내 발송';
+  const SHIPPING_LINE_1 = '배송비 4,000원 · 당일 10만↑무배 · 제주 +3000원';
+  const SHIPPING_LINE_2 = '금~일 주문 합배 · 3영업일 내 발송';
 
   const state = {
     products: [],
@@ -4307,7 +4385,417 @@ function init() {
 }
 
 
+
+/* request patch 2026-03-29 */
+function getSubtotal(items) {
+  return (items || []).reduce((sum, item) => {
+    const canceled = !!(item && (item.cancelCompleted || Number(item.canceledAt || 0) > 0 || String(item.status || '') === 'canceled'));
+    return canceled ? sum : sum + Number(item.price || 0) * Number(item.qty || 0);
+  }, 0);
+}
+
+function normalizeLocalOrderItem(item) {
+  if (!item) return null;
+  const cancelCompleted = !!(item.cancelCompleted || Number(item.canceledAt || 0) > 0 || String(item.status || '') === 'canceled');
+  const changeCompleted = !!(item.changeCompleted || Number(item.changedAt || 0) > 0 || String(item.status || '') === 'changed');
+  return {
+    id: String(item.id || item.itemId || uid('orderItem')).trim(),
+    productId: String(item.productId || '').trim(),
+    name: String(item.name || item.productName || '').replace(/^\[(변경|취소)\]\s*/, '').trim(),
+    image: String(item.image || CONFIG.logoSrc).trim() || CONFIG.logoSrc,
+    price: Number(item.price || 0),
+    color: cleanColorLabel(item.color || item.colorLabel || item.colorValue || '기본'),
+    colorValue: String(item.colorValue || item.color || '').trim() || cleanColorLabel(item.color || '기본'),
+    size: String(item.size || item.sizeValue || 'FREE').trim(),
+    sizeValue: String(item.sizeValue || item.size || 'FREE').trim(),
+    qty: clampQty(item.qty),
+    changeCompleted,
+    changedAt: Number(item.changedAt || 0),
+    cancelCompleted,
+    canceledAt: Number(item.canceledAt || 0)
+  };
+}
+
+function normalizeLocalOrder(order) {
+  if (!order) return null;
+  const customer = normalizeCustomer(order.customer || {
+    nickname: order.nickname,
+    name: order.name,
+    phone: order.phone,
+    address: order.address || order.addressText,
+    addressDetail: order.addressDetail,
+    memo: order.memo,
+    zonecode: order.zonecode
+  });
+  const items = (Array.isArray(order.items) ? order.items : []).map(normalizeLocalOrderItem).filter(Boolean);
+  if (!items.length) return null;
+  const subtotal = Number(order.subtotal || order.sum || getSubtotal(items));
+  const createdAt = Number(order.createdAt || parseKstDateTime(order.orderTime) || order.savedAt || Date.now());
+  return {
+    localId: String(order.localId || uid('localOrder')).trim(),
+    orderId: String(order.orderId || uid('oid')).trim(),
+    orderTime: String(order.orderTime || formatOrderTime()).trim(),
+    broadcastDate: String(order.broadcastDate || getBroadcastDateKey()).trim(),
+    customer,
+    items,
+    subtotal,
+    shipping: Number(order.shipping || 0),
+    total: Number(order.total || subtotal + Number(order.shipping || 0)),
+    createdAt,
+    updatedAt: Number(order.updatedAt || createdAt)
+  };
+}
+
+function isOrderItemChanged(item) {
+  return !!(item && (item.changeCompleted || Number(item.changedAt || 0) > 0));
+}
+
+function isOrderItemCanceled(item) {
+  return !!(item && (item.cancelCompleted || Number(item.canceledAt || 0) > 0));
+}
+
+function getOrderItemActionState(order, item) {
+  const withinWindow = isOrderEditable(order);
+  const canceled = isOrderItemCanceled(item);
+  const changed = !canceled && isOrderItemChanged(item);
+  return {
+    withinWindow,
+    canceled,
+    changed,
+    changeDisabled: canceled || changed || !withinWindow,
+    cancelDisabled: canceled || !withinWindow,
+    changeText: canceled ? '옵션 변경' : (changed ? '변경 완료' : '옵션 변경'),
+    cancelText: canceled ? '취소 완료' : '취소'
+  };
+}
+
+function renderBankAccountText() {
+  const bankLine = escapeHtml(`${CONFIG.bankName} ${CONFIG.bankAccount}`.trim());
+  const holderLine = escapeHtml(String(CONFIG.bankHolder || '').trim());
+  const html = `<span class="account-bank-line">${bankLine}</span><span class="account-bank-line account-holder-line">${holderLine}</span>`;
+  if (els.bankAccountText) els.bankAccountText.innerHTML = html;
+  if (els.successBankText) els.successBankText.innerHTML = html;
+}
+
+function renderOrders() {
+  pruneLocalOrders();
+  if (!state.localOrders.length) {
+    els.ordersList.innerHTML = '<div class="empty-block">최근 2주 내 완료한 주문이 없습니다.</div>';
+    return;
+  }
+
+  els.ordersList.innerHTML = state.localOrders.map((order) => {
+    const withinWindow = isOrderEditable(order);
+    const items = Array.isArray(order.items) ? order.items : [];
+    return `
+      <div class="order-card">
+        <div class="order-head">
+          <div class="order-title">
+            <strong>${escapeHtml(formatBroadcastLabel(order.broadcastDate || ''))}</strong>
+          </div>
+          <div class="order-total">${formatMoney(order.total || 0)}</div>
+        </div>
+        <div class="order-items">
+          ${items.map((item) => {
+            const actionState = getOrderItemActionState(order, item);
+            return `
+              <div class="order-item${actionState.canceled ? ' is-cancelled' : ''}">
+                <img src="${escapeHtml(item.image || CONFIG.logoSrc)}" alt="${escapeHtml(item.name)}">
+                <div>
+                  <div class="order-item-name">${escapeHtml(item.name)}</div>
+                  <div class="order-item-meta">${escapeHtml(formatOptionSummary(item, true))}</div>
+                  <div class="order-item-actions">
+                    <button
+                      type="button"
+                      class="small-btn navy${actionState.changeDisabled ? ' is-disabled' : ''}"
+                      data-edit-order-item="${escapeHtml(order.localId)}|${escapeHtml(item.id)}"
+                      ${actionState.changeDisabled ? 'disabled aria-disabled="true"' : ''}
+                    >${actionState.changeText}</button>
+                    <button
+                      type="button"
+                      class="small-btn danger${actionState.cancelDisabled ? ' is-disabled' : ''}"
+                      data-remove-order-item="${escapeHtml(order.localId)}|${escapeHtml(item.id)}"
+                      ${actionState.cancelDisabled ? 'disabled aria-disabled="true"' : ''}
+                    >${actionState.cancelText}</button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="order-total-line">
+          <span class="order-total-main">상품합계 ${formatMoney(order.subtotal || 0)} + 배송비 ${formatMoney(order.shipping || 0)}</span>
+          <strong class="order-total-final">총결제금액 ${formatMoney(order.total || 0)}</strong>
+        </div>
+        <div class="order-foot">
+          ${withinWindow ? '<div class="order-note">방송 종료 전까지 1회만 변경/취소 가능합니다.</div>' : '<div class="order-closed">변경 가능한 방송이 종료되었습니다.</div>'}
+          <div class="order-actions"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function cancelCartItem(cartItemId) {
+  const item = state.cart.find((entry) => entry.id === cartItemId);
+  if (!item) return;
+  const ok = await showConfirmDialog({
+    title: '선택 상품 삭제',
+    message: '이 상품을 장바구니에서 삭제할까요?',
+    confirmText: '삭제',
+    cancelText: '취소',
+    danger: true
+  });
+  if (!ok) return;
+  state.cart = state.cart.filter((entry) => entry.id !== cartItemId);
+  saveStorage();
+  renderCartCount();
+  renderCart();
+  renderCheckout();
+  await showActionPopup({ title: '장바구니에서 삭제되었습니다', message: '장바구니 목록을 업데이트했습니다.', tone: 'danger' });
+}
+
+async function handleDetailPrimary() {
+  if (state.working) return;
+
+  const product = getCurrentProduct();
+  if (!product) return;
+  if (!selectionIsAvailable(product, state.detailSelection.color, state.detailSelection.size)) {
+    showToast('선택 가능한 옵션을 확인해주세요.');
+    return;
+  }
+
+  const newItem = buildDetailItemPayload();
+  if (!newItem) return;
+
+  if (state.detailContext.mode === 'browse') {
+    closeSheets();
+    openCheckout('direct', [newItem]);
+    return;
+  }
+
+  if (state.detailContext.mode === 'cart') {
+    addOrMergeCartItem(newItem, state.detailContext.cartItemId);
+    saveStorage();
+    renderCartCount();
+    renderCart();
+    renderCheckout();
+    openSheet('cartSheet');
+    showActionPopup({ title: '옵션이 저장되었습니다', message: '장바구니로 돌아갑니다.' });
+    return;
+  }
+
+  if (state.detailContext.mode === 'order') {
+    const targetLocalId = state.detailContext.orderLocalId;
+    const targetItemId = state.detailContext.orderItemId;
+    const order = state.localOrders.find((entry) => entry.localId === targetLocalId);
+    const oldItem = state.detailContext.originalItem;
+    if (!order || !oldItem) return;
+
+    if (isOrderItemCanceled(oldItem)) {
+      showToast('이미 취소 완료된 상품입니다.');
+      return;
+    }
+    if (isOrderItemChanged(oldItem)) {
+      showToast('이미 변경 완료된 상품입니다.');
+      return;
+    }
+    if (!isOrderEditable(order)) {
+      showToast('변경 가능한 방송이 종료되었습니다.');
+      return;
+    }
+    if (areItemsSame(oldItem, newItem)) {
+      renderOrders();
+      openSheet('ordersSheet');
+      return;
+    }
+
+    const changedAt = Date.now();
+    const simulatedOrders = simulateLocalOrders((draft) => {
+      const draftOrder = draft.find((entry) => entry.localId === targetLocalId);
+      if (!draftOrder) return;
+      draftOrder.items = (draftOrder.items || []).map((entry) => {
+        if (entry.id !== targetItemId) return entry;
+        return Object.assign({}, newItem, {
+          id: targetItemId,
+          changeCompleted: true,
+          changedAt,
+          cancelCompleted: !!entry.cancelCompleted,
+          canceledAt: Number(entry.canceledAt || 0)
+        });
+      });
+      draftOrder.subtotal = getSubtotal(draftOrder.items);
+      draftOrder.updatedAt = changedAt;
+    });
+    const nextOrder = simulatedOrders.find((entry) => entry.localId === targetLocalId);
+    if (!nextOrder) return;
+
+    const payload = {
+      eventId: uid('chg'),
+      eventType: 'change',
+      orderId: order.orderId,
+      orderTime: formatOrderTime(),
+      broadcastDate: order.broadcastDate,
+      customer: order.customer,
+      items: [{
+        itemId: oldItem.id,
+        productId: newItem.productId,
+        productName: '[변경] ' + newItem.name,
+        color: newItem.color,
+        size: newItem.size,
+        qty: newItem.qty,
+        price: newItem.price,
+        image: newItem.image || '',
+        amountDelta: Number(newItem.price || 0) * Number(newItem.qty || 0) - Number(oldItem.price || 0) * Number(oldItem.qty || 0)
+      }],
+      sum: nextOrder.subtotal,
+      shipping: nextOrder.shipping,
+      total: nextOrder.total
+    };
+
+    showConfirmDialog({
+      title: '선택 상품 변경',
+      message: '선택한 옵션으로 변경할까요?',
+      confirmText: '변경 완료',
+      cancelText: '취소',
+      danger: false,
+      onConfirm: async () => {
+        try {
+          confirmBusy = true;
+          state.working = true;
+          els.confirmOkBtn.textContent = '변경 요청중...';
+          els.confirmOkBtn.disabled = true;
+          els.confirmCancelBtn.disabled = true;
+
+          const result = await apiPost(payload);
+          if (result && result.ok === false) throw new Error(result.message || '옵션 변경에 실패했습니다.');
+
+          state.localOrders = simulatedOrders;
+          saveStorage();
+          closeConfirmDialog(true);
+          renderOrders();
+          openSheet('ordersSheet');
+          await showActionPopup({ title: '옵션 변경이 완료되었습니다', message: '주문 내역으로 돌아갑니다.' });
+        } catch (error) {
+          console.error(error);
+          confirmBusy = false;
+          els.confirmOkBtn.textContent = '변경 완료';
+          els.confirmOkBtn.disabled = false;
+          els.confirmCancelBtn.disabled = false;
+          showToast(error && error.message ? error.message : '옵션 변경 중 오류가 발생했습니다.');
+        } finally {
+          state.working = false;
+        }
+      }
+    });
+  }
+}
+
+function cancelOrderItem(orderLocalId, orderItemId) {
+  const order = state.localOrders.find((entry) => entry.localId === orderLocalId);
+  const item = order && (order.items || []).find((entry) => entry.id === orderItemId);
+  if (!order || !item) return;
+
+  if (isOrderItemCanceled(item)) {
+    showToast('이미 취소 완료된 상품입니다.');
+    return;
+  }
+  if (!isOrderEditable(order)) {
+    showToast('변경 가능한 방송이 종료되었습니다.');
+    return;
+  }
+
+  const canceledAt = Date.now();
+  const simulatedOrders = simulateLocalOrders((draft) => {
+    const draftOrder = draft.find((entry) => entry.localId === orderLocalId);
+    if (!draftOrder) return;
+    draftOrder.items = (draftOrder.items || []).map((entry) => {
+      if (entry.id !== orderItemId) return entry;
+      return Object.assign({}, entry, {
+        cancelCompleted: true,
+        canceledAt,
+        changeCompleted: !!entry.changeCompleted,
+        changedAt: Number(entry.changedAt || 0)
+      });
+    });
+    draftOrder.subtotal = getSubtotal(draftOrder.items);
+    draftOrder.updatedAt = canceledAt;
+  });
+  const nextOrder = simulatedOrders.find((entry) => entry.localId === orderLocalId);
+  if (!nextOrder) return;
+
+  const payload = {
+    eventId: uid('cancelItem'),
+    eventType: 'cancel',
+    orderId: order.orderId,
+    orderTime: formatOrderTime(),
+    broadcastDate: order.broadcastDate,
+    customer: order.customer,
+    items: [{
+      itemId: item.id,
+      productId: item.productId,
+      productName: '[취소] ' + item.name,
+      color: item.color,
+      size: item.size,
+      qty: item.qty,
+      price: item.price,
+      image: item.image || '',
+      amountDelta: -(Number(item.price || 0) * Number(item.qty || 0))
+    }],
+    sum: nextOrder.subtotal,
+    shipping: nextOrder.shipping,
+    total: nextOrder.total
+  };
+
+  showConfirmDialog({
+    title: '주문 상품 취소',
+    message: '이 상품을 주문 내역에서 취소할까요?',
+    confirmText: '취소하기',
+    cancelText: '닫기',
+    danger: true,
+    onConfirm: async () => {
+      try {
+        confirmBusy = true;
+        els.confirmOkBtn.textContent = '취소 요청중...';
+        els.confirmOkBtn.disabled = true;
+        els.confirmCancelBtn.disabled = true;
+
+        const result = await apiPost(payload);
+        if (result && result.ok === false) throw new Error(result.message || '주문 상품 취소에 실패했습니다.');
+
+        state.localOrders = simulatedOrders;
+        saveStorage();
+        closeConfirmDialog(true);
+        renderOrders();
+        openSheet('ordersSheet');
+        await showActionPopup({ title: '취소가 완료되었습니다.', message: '주문 내역으로 돌아갑니다.', tone: 'danger' });
+      } catch (error) {
+        console.error(error);
+        confirmBusy = false;
+        els.confirmOkBtn.textContent = '취소하기';
+        els.confirmOkBtn.disabled = false;
+        els.confirmCancelBtn.disabled = false;
+        showToast(error && error.message ? error.message : '주문 상품 취소 중 오류가 발생했습니다.');
+      }
+    }
+  });
+}
+
+function getBackFallbackUrl() {
+  return '';
+}
+
+function navigateOutOfHome() {
+  try {
+    if (window.history.length > 1) {
+      window.history.back();
+    }
+  } catch (error) {}
+}
+
+
   init();
+  renderBankAccountText();
 })();
 
   </script>
