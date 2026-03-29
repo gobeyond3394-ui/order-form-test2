@@ -1118,6 +1118,222 @@ body{
   }
 }
 
+
+
+/* refinement patch 2026-03-29 v4 */
+:root{
+  --topbar-h:82px;
+}
+body{
+  padding-top:calc(var(--topbar-h) + var(--safe-top) + 8px)!important;
+}
+.topbar{
+  background:rgba(255,255,255,.985)!important;
+  box-shadow:0 10px 24px rgba(15,23,42,.04)!important;
+}
+.topbar-inner{
+  min-height:var(--topbar-h)!important;
+  padding:13px 16px 12px!important;
+  gap:16px!important;
+  align-items:center!important;
+}
+.brand{
+  display:flex!important;
+  align-items:center!important;
+  gap:11px!important;
+  flex:1 1 auto!important;
+  min-width:0!important;
+}
+.brand-mark{
+  width:45px!important;
+  height:45px!important;
+  min-width:45px!important;
+  box-shadow:0 4px 12px rgba(15,23,42,.06)!important;
+}
+.brand-copy{
+  display:flex!important;
+  align-items:flex-end!important;
+  gap:10px!important;
+  min-width:0!important;
+  white-space:nowrap!important;
+  padding-bottom:1px!important;
+}
+.brand-wordmark,
+.brand-subline{
+  font-family:"NanumSquare","Noto Sans CJK KR","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif!important;
+  text-rendering:optimizeLegibility!important;
+}
+.brand-wordmark{
+  display:block!important;
+  font-size:21.5px!important;
+  line-height:1!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
+  font-stretch:108%!important;
+  transform:scaleX(1.04)!important;
+  transform-origin:left center!important;
+  color:#1f2937!important;
+}
+.brand-subline{
+  display:block!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  letter-spacing:.12em!important;
+  font-stretch:106%!important;
+  transform:scaleX(1.04)!important;
+  transform-origin:left center!important;
+  color:#6b7280!important;
+  padding-bottom:2px!important;
+}
+.top-actions{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  flex:0 0 auto!important;
+}
+.icon-box.talk-box,
+.icon-box.cart-box{
+  width:52px!important;
+  height:52px!important;
+  flex:0 0 52px!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  border:1px solid rgba(15,23,42,.08)!important;
+  box-shadow:0 4px 12px rgba(15,23,42,.04)!important;
+  color:#111827!important;
+}
+.icon-box.talk-box svg,
+.icon-box.cart-box svg{
+  width:28px!important;
+  height:28px!important;
+}
+.icon-box.cart-box .count-badge{
+  right:-4px!important;
+  top:-4px!important;
+}
+.social-row{
+  margin-top:18px!important;
+  gap:18px!important;
+}
+.social-icon-btn{
+  width:64px!important;
+  height:64px!important;
+  min-height:64px!important;
+  border-radius:20px!important;
+  box-shadow:0 5px 14px rgba(15,23,42,.05)!important;
+}
+.social-icon-btn.youtube{
+  border:1px solid rgba(15,23,42,.11)!important;
+  background:#fff!important;
+}
+.social-icon-btn.youtube svg{
+  width:56px!important;
+  height:56px!important;
+  display:block!important;
+}
+.social-icon-btn.youtube .youtube-icon-bg{
+  fill:#ff0033!important;
+}
+.social-icon-btn.youtube .youtube-icon-play{
+  fill:#fff!important;
+}
+.social-icon-btn.tiktok{
+  background:#111827!important;
+  border-color:#111827!important;
+  box-shadow:0 5px 14px rgba(15,23,42,.07)!important;
+}
+.social-icon-btn.tiktok .social-icon-media{
+  width:31px!important;
+  height:31px!important;
+}
+@media (max-width:520px){
+  :root{
+    --topbar-h:78px;
+  }
+  body{
+    padding-top:calc(var(--topbar-h) + var(--safe-top) + 8px)!important;
+  }
+  .topbar-inner{
+    padding:12px 14px 11px!important;
+    gap:14px!important;
+  }
+  .brand{
+    gap:10px!important;
+  }
+  .brand-mark{
+    width:43px!important;
+    height:43px!important;
+    min-width:43px!important;
+  }
+  .brand-copy{
+    gap:9px!important;
+  }
+  .brand-wordmark{
+    font-size:20px!important;
+  }
+  .brand-subline{
+    font-size:11.2px!important;
+  }
+  .icon-box.talk-box,
+  .icon-box.cart-box{
+    width:50px!important;
+    height:50px!important;
+    flex-basis:50px!important;
+  }
+  .icon-box.talk-box svg,
+  .icon-box.cart-box svg{
+    width:27px!important;
+    height:27px!important;
+  }
+  .social-row{
+    gap:16px!important;
+  }
+  .social-icon-btn{
+    width:60px!important;
+    height:60px!important;
+    min-height:60px!important;
+    border-radius:18px!important;
+  }
+  .social-icon-btn.youtube svg{
+    width:52px!important;
+    height:52px!important;
+  }
+  .social-icon-btn.tiktok .social-icon-media{
+    width:29px!important;
+    height:29px!important;
+  }
+}
+@media (max-width:390px){
+  .topbar-inner{
+    gap:12px!important;
+  }
+  .brand-copy{
+    gap:8px!important;
+  }
+  .brand-wordmark{
+    font-size:18.5px!important;
+  }
+  .brand-subline{
+    font-size:10.6px!important;
+  }
+  .top-actions{
+    gap:8px!important;
+  }
+  .icon-box.talk-box,
+  .icon-box.cart-box{
+    width:48px!important;
+    height:48px!important;
+    flex-basis:48px!important;
+    border-radius:15px!important;
+  }
+  .icon-box.talk-box svg,
+  .icon-box.cart-box svg{
+    width:26px!important;
+    height:26px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1157,9 +1373,9 @@ body{
       <p class="hero-copy">지금 방송 중인 상품을 만나보세요.</p>
       <div class="social-row">
         <button type="button" class="social-icon-btn youtube" id="openYoutubeBtn" aria-label="유튜브 방송보기">
-          <svg viewBox="0 0 32 24" aria-hidden="true" focusable="false">
-            <path class="youtube-icon-bg" d="M31.3 6.4a4 4 0 0 0-2.8-2.8C26 2.9 16 2.9 16 2.9s-10 0-12.5.7A4 4 0 0 0 .7 6.4 41.8 41.8 0 0 0 0 12c0 1.9.2 3.8.7 5.6a4 4 0 0 0 2.8 2.8c2.5.7 12.5.7 12.5.7s10 0 12.5-.7a4 4 0 0 0 2.8-2.8c.4-1.8.7-3.7.7-5.6 0-1.9-.3-3.8-.7-5.6Z"></path>
-            <path class="youtube-icon-play" d="M12.9 16.8V7.2L21 12l-8.1 4.8Z"></path>
+          <svg viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+            <rect class="youtube-icon-bg" fill="#ff0033" x="2.5" y="7" width="35" height="26" rx="9"></rect>
+            <path class="youtube-icon-play" fill="#ffffff" d="M16.2 14.2 27.1 20l-10.9 5.8V14.2Z"></path>
           </svg>
           <span class="sr-only">유튜브 방송보기</span>
         </button>
