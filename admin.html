@@ -7,7 +7,7 @@
 <style>
   :root{
     --bg:#ffffff;
-    --panel:#f5f6f8;
+    --panel:#ffffff;
     --surface:#ffffff;
     --surface-soft:#ffffff;
     --ink:#111827;
@@ -48,8 +48,8 @@
   .topbar{
     position:fixed;inset:0 0 auto 0;z-index:80;
     background:#ffffff;
-    box-shadow:0 8px 20px rgba(15,23,42,.06);
-    border-bottom:1px solid rgba(15,23,42,.08);
+    box-shadow:none;
+    border-bottom:0;
     padding-top:var(--safe-top);
   }
   .topbar:after{display:none;}
@@ -59,8 +59,8 @@
   }
   .brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto;}
   .brand-mark{
-    width:58px;height:58px;border-radius:18px;overflow:hidden;flex:0 0 auto;
-    box-shadow:0 8px 16px rgba(15,23,42,.10);background:#ffffff;
+    width:58px;height:58px;border-radius:999px;overflow:hidden;flex:0 0 auto;
+    box-shadow:none;background:#ffffff;
   }
   .brand-mark img{width:100%;height:100%;object-fit:cover;}
   .brand-copy{min-width:0;}
@@ -74,16 +74,17 @@
   }
   .top-actions{display:flex;gap:8px;flex:0 0 auto;min-width:0;}
   .top-btn{
-    min-height:42px;padding:0 16px;border-radius:16px;border:1px solid var(--line-strong);background:#ffffff;
-    display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#344054;
+    width:44px;height:44px;min-height:44px;padding:0;border-radius:999px;border:0;background:transparent;
+    display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#111827;
     white-space:nowrap;box-shadow:none;flex:0 0 auto;
   }
+  .top-btn svg{width:22px;height:22px;stroke:currentColor;}
 
-  .page{width:100%;max-width:760px;min-width:0;margin:0 auto;padding:16px 16px 32px;}
+  .page{width:100%;max-width:760px;min-width:0;margin:0 auto;padding:16px 16px 32px;background:#ffffff;}
 
   .stats-panel{
     display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;
-    padding:18px;border-radius:28px;background:var(--panel);border:1px solid var(--line);width:100%;min-width:0;
+    padding:18px;border-radius:28px;background:#ffffff;border:1px solid #ffffff;width:100%;min-width:0;
   }
   .stat-card{
     min-height:92px;padding:16px 14px;border-radius:22px;background:#fff;border:1px solid var(--line-strong);
@@ -95,7 +96,7 @@
   .stat-card.is-active strong,.stat-card.is-active span{color:#fff;}
 
   .section{
-    margin-top:18px;padding:20px;border-radius:28px;background:var(--panel);border:1px solid var(--line);width:100%;min-width:0;overflow:hidden;
+    margin-top:18px;padding:20px;border-radius:28px;background:#ffffff;border:1px solid #ffffff;width:100%;min-width:0;overflow:hidden;
   }
   .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
   .section-title{margin:0;font-size:20px;line-height:1.2;font-weight:950;letter-spacing:-.03em;color:#111827;}
@@ -309,7 +310,7 @@
     body{padding-top:calc(86px + var(--safe-top));}
     .topbar-inner{padding:10px 14px 12px;min-height:72px;gap:10px;}
     .brand{gap:10px;}
-    .brand-mark{width:52px;height:52px;border-radius:16px;}
+    .brand-mark{width:52px;height:52px;border-radius:999px;}
     .brand-copy strong{font-size:17px;}
     .brand-copy span{font-size:11px;}
     .page{padding-left:14px;padding-right:14px;}
@@ -317,7 +318,7 @@
     .toggle-group{grid-template-columns:1fr;}
     .product-price{font-size:22px;}
     .success-overlay{width:min(92vw,320px);}
-    .top-btn{min-height:40px;padding:0 14px;font-size:13px;}
+    .top-btn{min-height:40px;width:40px;height:40px;padding:0;font-size:13px;}
   }
 </style>
 </head>
@@ -332,7 +333,13 @@
       </div>
     </div>
     <div class="top-actions">
-      <button class="top-btn" type="button" id="openShopBtn">상점 보기</button>
+      <button class="top-btn" type="button" id="openShopBtn" aria-label="상점 보기" title="상점 보기">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 9l1.5-4h13L20 9"></path>
+          <path d="M5 10h14v9H5z"></path>
+          <path d="M9 19v-4h6v4"></path>
+        </svg>
+      </button>
     </div>
   </div>
 </header>
@@ -406,10 +413,6 @@
             </select>
           </div>
           <div class="field full">
-            <label for="liveNoteInput">메모</label>
-            <textarea id="liveNoteInput" placeholder="예) 방송 중 반응 좋음 / 수량 적음"></textarea>
-          </div>
-          <div class="field full">
             <label>상태 배지</label>
             <div class="toggle-group">
               <button type="button" class="toggle-chip flash" data-toggle-key="flashSale">⚡ 플래시 상품</button>
@@ -440,7 +443,7 @@
     </div>
 
     <div class="action-row">
-      <button class="btn primary" type="button" id="saveBtn">상품 저장</button>
+      <button class="btn primary" type="button" id="saveBtn">상품 등록</button>
       <button class="btn secondary" type="button" id="resetBtn">초기화</button>
       <button class="btn danger hidden" type="button" id="deleteBtn">상품 삭제</button>
     </div>
@@ -459,7 +462,7 @@
           <circle cx="11" cy="11" r="7"></circle>
           <path d="M20 20l-3.5-3.5"></path>
         </svg>
-        <input id="listSearchInput" type="search" placeholder="상품명 / 메모 / 색상 검색">
+        <input id="listSearchInput" type="search" placeholder="상품명 / 색상 검색">
       </div>
     </div>
     <div class="filter-chip-row" id="listFilterRow"></div>
@@ -528,7 +531,6 @@ const els = {
   nameInput: document.getElementById('nameInput'),
   priceInput: document.getElementById('priceInput'),
   typeInput: document.getElementById('typeInput'),
-  liveNoteInput: document.getElementById('liveNoteInput'),
   newColorInput: document.getElementById('newColorInput'),
   addColorBtn: document.getElementById('addColorBtn'),
   newSizeInput: document.getElementById('newSizeInput'),
@@ -946,10 +948,10 @@ function getAllSizeKeys() {
 
 
 function syncFormFromInputs() {
-  state.form.name = els.nameInput.value.trim();
-  state.form.price = els.priceInput.value.trim();
-  state.form.productType = els.typeInput.value || '의류';
-  state.form.liveNote = els.liveNoteInput.value.trim();
+  if (els.nameInput) state.form.name = els.nameInput.value.trim();
+  if (els.priceInput) state.form.price = els.priceInput.value.trim();
+  if (els.typeInput) state.form.productType = els.typeInput.value || '의류';
+  state.form.liveNote = '';
 }
 
   function renderToggleChips() {
@@ -1032,7 +1034,6 @@ function renderForm() {
   els.nameInput.value = state.form.name || '';
   els.priceInput.value = state.form.price || '';
   els.typeInput.value = state.form.productType || '의류';
-  els.liveNoteInput.value = state.form.liveNote || '';
   renderToggleChips();
   buildCurrentStatusPills();
   renderPreview();
@@ -1041,7 +1042,7 @@ function renderForm() {
   renderColorBoard();
   els.editBanner.classList.toggle('show', !!state.editingId);
   els.deleteBtn.classList.toggle('hidden', !state.editingId);
-  els.saveBtn.textContent = state.editingId ? '상품 수정' : '상품 저장';
+  els.saveBtn.textContent = state.editingId ? '상품 수정' : '상품 등록';
   els.resetBtn.textContent = state.editingId ? '수정 취소' : '초기화';
 }
 
@@ -1122,7 +1123,6 @@ function renderForm() {
       const passKeyword = !keyword || [
         product.name,
         product.productType,
-        product.liveNote,
         (product.colorOptions || []).map((color) => color.label || color.value || '').join(' ')
       ].join(' ').toLowerCase().indexOf(keyword) >= 0;
       let passFilter = true;
@@ -1264,7 +1264,7 @@ function renderForm() {
       colorOptions,
       flashSale: !!state.form.flashSale,
       badges: buildBadges(),
-      liveNote: state.form.liveNote,
+      liveNote: '',
       createdAt: state.editingId ? undefined : timestamp,
       updatedAt: timestamp
     };
@@ -1362,7 +1362,7 @@ function renderForm() {
       name: product.name,
       price: String(product.price),
       productType: product.productType || '의류',
-      liveNote: product.liveNote || '',
+      liveNote: '',
       flashSale: !!product.flashSale,
       soldOutSoon: !!product.isSoldOutSoon,
       soldOut: !!product.isSoldOut,
@@ -1419,7 +1419,7 @@ function resetForm() {
         flashSale: !!state.form.flashSale,
         soldOutSoon: !!state.form.soldOutSoon,
         soldOut: !!state.form.soldOut,
-        liveNote: state.form.liveNote,
+        liveNote: '',
         badges: buildBadges(),
         createdAt: options.createdAt,
         updatedAt: options.updatedAt,
@@ -1505,28 +1505,39 @@ function bindEvents() {
   els.cameraInput.addEventListener('change', (event) => handleImageFile(event.target.files && event.target.files[0]));
   els.albumInput.addEventListener('change', (event) => handleImageFile(event.target.files && event.target.files[0]));
   els.editCancelBtn.addEventListener('click', resetForm);
+  if (els.nameInput) els.nameInput.addEventListener('input', syncFormFromInputs);
+  if (els.priceInput) els.priceInput.addEventListener('input', syncFormFromInputs);
   els.typeInput.addEventListener('change', () => {
     syncFormFromInputs();
     renderColorBoard();
   });
   document.querySelectorAll('[data-toggle-key]').forEach((button) => {
     button.addEventListener('click', () => {
+      syncFormFromInputs();
       const key = button.getAttribute('data-toggle-key');
       state.form[key] = !state.form[key];
       renderForm();
     });
   });
-  els.addColorBtn.addEventListener('click', () => addColor(els.newColorInput.value));
+  els.addColorBtn.addEventListener('click', () => {
+    syncFormFromInputs();
+    addColor(els.newColorInput.value);
+  });
   els.newColorInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
+      syncFormFromInputs();
       addColor(els.newColorInput.value);
     }
   });
-  els.addSizeBtn.addEventListener('click', () => addCustomSizes(els.newSizeInput.value));
+  els.addSizeBtn.addEventListener('click', () => {
+    syncFormFromInputs();
+    addCustomSizes(els.newSizeInput.value);
+  });
   els.newSizeInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
+      syncFormFromInputs();
       addCustomSizes(els.newSizeInput.value);
     }
   });
@@ -1539,6 +1550,7 @@ function bindEvents() {
   });
 
   document.addEventListener('click', (event) => {
+    syncFormFromInputs();
     const statFilter = event.target.closest('[data-list-filter]');
     if (statFilter) {
       state.listFilter = statFilter.getAttribute('data-list-filter') || 'ALL';
@@ -1613,6 +1625,7 @@ function bindEvents() {
   });
 
   document.addEventListener('change', (event) => {
+    syncFormFromInputs();
     if (event.target.matches('[data-color-soldout]')) {
       const colorId = event.target.getAttribute('data-color-soldout');
       const color = state.form.colors.find((item) => item.id === colorId);
