@@ -514,7 +514,7 @@
 <script>
 (() => {
   const CONFIG = {
-    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbwBiQeQWihO4YsJptwXUxztT4K2cqWhOhwx9mewho9GgaCwe7BjAbOlEpCwDpjhRsdtbw/exec',
+    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbwtvhQmvM4_ED0OYa1OBAix_3zB-S40fPAqXx9AEUdVR5x6AmXMjWRyGq1Nh5CKF5_Z2g/exec',
     shopUrl: './index.html',
     cacheKey: 'ssu_admin_products_cache_v6',
     versionKey: 'productCatalogVersion',
@@ -2184,7 +2184,170 @@ init = function() {
 };
 
 
+
+function applyLatestAdminUserPatch_() {
+  if (document.body.dataset.latestAdminUserPatchApplied !== '1') {
+    document.body.dataset.latestAdminUserPatchApplied = '1';
+
+    if (!document.getElementById('latestAdminUserStyle')) {
+      const style = document.createElement('style');
+      style.id = 'latestAdminUserStyle';
+      style.textContent = `
+        .product-body{
+          gap:4px!important;
+        }
+        .product-price{
+          margin-top:0!important;
+        }
+        .product-meta-lines{
+          margin-top:0!important;
+          gap:4px!important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+
+  const uniqueTextList_ = (list) => {
+    return (Array.isArray(list) ? list : [])
+      .map((item) => String(item || '').trim())
+      .filter((item) => item && !/^\[object object\]$/i.test(item))
+      .filter((item, index, arr) => arr.indexOf(item) === index);
+  };
+
+  const collectExplicitCustomSizeKeys_ = (color, type) => {
+    const preset = getPresetSizes(type || state.form.productType || '의류');
+    const manual = uniqueTextList_((color && color.__customSizeKeys) || []);
+    const stateKeys = uniqueTextList_(Object.keys((color && color.sizeStates) || {})).filter((key) => preset.indexOf(key) === -1);
+    return uniqueTextList_(manual.concat(stateKeys));
+  };
+
+  getColorSizeKeys_ = function(color) {
+    const preset = getPresetSizes(state.form.productType);
+    const custom = collectExplicitCustomSizeKeys_(color, state.form.productType);
+    const merged = [];
+    preset.concat(custom).forEach((item) => {
+      const text = String(item || '').trim();
+      if (!text || merged.indexOf(text) >= 0 || /^\[object object\]$/i.test(text)) return;
+      merged.push(text);
+    });
+    if (!merged.length) merged.push('FREE');
+    return merged;
+  };
+
+  ensureColorStates = function() {
+    state.form.colors.forEach((color) => {
+      color.sizeStates = color.sizeStates || {};
+      color.__customSizeKeys = collectExplicitCustomSizeKeys_(color, state.form.productType);
+      const keys = getColorSizeKeys_(color);
+      const nextStates = {};
+      keys.forEach((sizeKey) => {
+        const current = color.sizeStates[sizeKey] || {};
+        nextStates[sizeKey] = {
+          enabled: !!current.enabled,
+          soldOut: !!current.soldOut
+        };
+      });
+      color.sizeStates = nextStates;
+    });
+  };
+
+  const migrateColorStatesForTypeChange_ = (fromType, toType) => {
+    state.form.colors.forEach((color) => {
+      const existing = color.sizeStates || {};
+      const customKeys = collectExplicitCustomSizeKeys_(color, fromType);
+      const nextStates = {};
+      getPresetSizes(toType).forEach((sizeKey) => {
+        const current = existing[sizeKey] || {};
+        nextStates[sizeKey] = {
+          enabled: !!current.enabled,
+          soldOut: !!current.soldOut
+        };
+      });
+      customKeys.forEach((sizeKey) => {
+        const current = existing[sizeKey] || {};
+        nextStates[sizeKey] = {
+          enabled: current.enabled !== undefined ? !!current.enabled : true,
+          soldOut: !!current.soldOut
+        };
+      });
+      color.__customSizeKeys = customKeys.slice();
+      color.sizeStates = nextStates;
+    });
+  };
+
+  const baseEditProductLatest = editProduct;
+  editProduct = function(productId) {
+    baseEditProductLatest(productId);
+    state.form.colors.forEach((color) => {
+      color.__customSizeKeys = collectExplicitCustomSizeKeys_(color, state.form.productType);
+    });
+    if (els.typeInput) els.typeInput.dataset.prevType = state.form.productType || els.typeInput.value || '의류';
+    renderForm();
+  };
+
+  const baseResetFormLatest = resetForm;
+  resetForm = function() {
+    baseResetFormLatest();
+    if (els.typeInput) els.typeInput.dataset.prevType = state.form.productType || els.typeInput.value || '의류';
+  };
+
+  const baseAddColorLatest = addColor;
+  addColor = function(labelText) {
+    baseAddColorLatest(labelText);
+    const newest = state.form.colors[state.form.colors.length - 1];
+    if (newest && !Array.isArray(newest.__customSizeKeys)) newest.__customSizeKeys = [];
+    renderColorBoard();
+  };
+
+  if (els.typeInput && !els.typeInput.dataset.latestTypePatchBound) {
+    els.typeInput.dataset.latestTypePatchBound = '1';
+    els.typeInput.dataset.prevType = state.form.productType || els.typeInput.value || '의류';
+    els.typeInput.addEventListener('change', () => {
+      const previousType = els.typeInput.dataset.prevType || '의류';
+      const nextType = els.typeInput.value || '의류';
+      if (previousType !== nextType) {
+        migrateColorStatesForTypeChange_(previousType, nextType);
+      }
+      state.form.productType = nextType;
+      els.typeInput.dataset.prevType = nextType;
+      renderColorBoard();
+    });
+  }
+
+  if (!document.body.dataset.latestAdminCaptureBound) {
+    document.body.dataset.latestAdminCaptureBound = '1';
+    document.addEventListener('click', (event) => {
+      const addSizeBtn = event.target.closest('[data-add-color-size]');
+      if (!addSizeBtn) return;
+      const colorId = addSizeBtn.getAttribute('data-add-color-size');
+      const input = document.querySelector('[data-color-size-input="' + colorId + '"]');
+      const color = state.form.colors.find((item) => item.id === colorId);
+      const raw = input ? String(input.value || '').trim() : '';
+      if (!color || !raw) return;
+      const tokens = uniqueTextList_(raw.split(',').map((item) => String(item || '').trim()).filter(Boolean));
+      color.__customSizeKeys = uniqueTextList_(collectExplicitCustomSizeKeys_(color, state.form.productType).concat(tokens));
+      color.sizeStates = color.sizeStates || {};
+      tokens.forEach((token) => {
+        color.sizeStates[token] = color.sizeStates[token] || { enabled: true, soldOut: false };
+        color.sizeStates[token].enabled = true;
+        color.sizeStates[token].soldOut = !!color.sizeStates[token].soldOut;
+      });
+    }, true);
+  }
+
+  if (els.typeInput) els.typeInput.dataset.prevType = state.form.productType || els.typeInput.value || '의류';
+  state.form.colors.forEach((color) => {
+    color.__customSizeKeys = collectExplicitCustomSizeKeys_(color, state.form.productType);
+  });
+
+  renderForm();
+  renderProductList();
+}
+
+
   init();
+  applyLatestAdminUserPatch_();
 })();
 </script>
 </body>
