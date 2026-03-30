@@ -320,6 +320,39 @@
     .success-overlay{width:min(92vw,320px);}
     .top-btn{min-height:40px;width:40px;height:40px;padding:0;font-size:13px;}
   }
+
+
+/* final comprehensive patch 2026-03-30 */
+.topbar-inner{align-items:center!important}
+.brand-copy{display:flex!important;align-items:center!important;gap:10px!important;white-space:nowrap!important}
+.brand-copy strong{font-size:21px!important;line-height:1!important}
+.brand-copy span{margin-top:0!important;font-size:13px!important;line-height:1!important}
+.top-btn{width:50px!important;height:50px!important;min-height:50px!important;border-radius:16px!important;border:1px solid #e5e7eb!important;background:#fff!important;box-shadow:none!important}
+.top-btn svg{width:28px!important;height:28px!important}
+.option-toolbar-grid .soft-input-group:last-child{display:none!important}
+#customSizeChipRow{display:none!important}
+.edit-banner{padding:14px 16px!important;align-items:center!important}
+.edit-banner .tiny-btn{display:none!important}
+.btn-row,.product-actions,.action-row{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}
+.action-row .btn{width:100%}
+#deleteBtn{display:none!important}
+.product-meta-lines{margin-top:8px;display:grid;gap:4px;font-size:12px;line-height:1.55;font-weight:800;color:#667085}
+.product-meta-lines strong{font-size:12px;font-weight:900;color:#334155}
+.color-card-title{display:grid;gap:6px}
+.color-card-help{font-size:12px;line-height:1.55;font-weight:800;color:#667085}
+.color-card-actions{justify-content:flex-start!important}
+.color-card-custom{margin-top:12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.color-card-custom input{height:42px;border:1px solid var(--line-strong);border-radius:14px;padding:0 14px;font-size:14px;font-weight:800;color:#111827;background:#fff}
+.color-card-custom button{min-height:42px;padding:0 14px;border-radius:14px;border:1px solid var(--line-strong);background:#f3f4f6;color:#334155;font-size:13px;font-weight:900}
+.product-body{display:grid;gap:8px}
+.product-price{margin-top:0!important}
+.product-actions .btn.secondary{background:#111827!important;color:#fff!important;border-color:#111827!important}
+.product-actions .btn.danger{background:#fff1ef!important;color:#d92d20!important;border-color:#ffd5cf!important}
+.success-overlay.danger .success-circle{background:linear-gradient(135deg,#ffeceb,#fff7f6)!important;color:#d92d20!important;box-shadow:0 12px 24px rgba(217,45,32,.12)!important}
+@media (max-width:640px){
+  .btn-row,.product-actions,.action-row{grid-template-columns:1fr 1fr!important}
+}
+
 </style>
 </head>
 <body>
@@ -481,7 +514,7 @@
 <script>
 (() => {
   const CONFIG = {
-    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbzbULF15MeCV0tcHXXk4tHUlZlHWvZKBMFe4Akw3jUJvfRFW7GxehT6qdbsxr3Pt5RJQg/exec',
+    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbwBiQeQWihO4YsJptwXUxztT4K2cqWhOhwx9mewho9GgaCwe7BjAbOlEpCwDpjhRsdtbw/exec',
     shopUrl: './index.html',
     cacheKey: 'ssu_admin_products_cache_v6',
     versionKey: 'productCatalogVersion',
@@ -1750,6 +1783,406 @@ function bindEvents() {
     loadProducts(true);
     startVersionPolling();
   }
+
+
+/* final comprehensive patch 2026-03-30 */
+function normalizeSize(size) {
+  if (typeof size === 'string' || typeof size === 'number') {
+    const text = String(size).trim();
+    if (!text || /^\[object object\]$/i.test(text)) return null;
+    return { value: text, label: text, soldOut: false };
+  }
+  if (!size) return null;
+  const value = String(size.value || size.size || size.name || size.label || '').trim();
+  if (!value || /^\[object object\]$/i.test(value)) return null;
+  return {
+    value,
+    label: String(size.label || value).trim() || value,
+    soldOut: !!(size.soldOut || size.soldout || size.isSoldOut)
+  };
+}
+
+function getDefaultEnabledSizesForType_(type) {
+  const normalized = String(type || state.form.productType || '의류').trim() || '의류';
+  if (normalized === '의류') return ['S', 'M', 'L', 'XL'];
+  return getPresetSizes(normalized).slice(0, 4);
+}
+
+function getInitialForm() {
+  return {
+    id: '',
+    name: '',
+    price: '',
+    productType: '의류',
+    liveNote: '',
+    flashSale: false,
+    soldOutSoon: false,
+    soldOut: false,
+    imageUrl: '',
+    imageBase64: '',
+    fileName: '',
+    customSizes: '',
+    colors: []
+  };
+}
+
+function renderCustomSizeChips() {
+  if (els.customSizeChipRow) els.customSizeChipRow.innerHTML = '';
+}
+
+function getColorSizeKeys_(color) {
+  const preset = getPresetSizes(state.form.productType);
+  const custom = Object.keys((color && color.sizeStates) || {}).filter((key) => preset.indexOf(key) === -1 && !/^\[object object\]$/i.test(String(key || '').trim()));
+  const merged = [];
+  preset.concat(custom).forEach((item) => {
+    const text = String(item || '').trim();
+    if (!text || merged.indexOf(text) >= 0) return;
+    merged.push(text);
+  });
+  if (!merged.length) merged.push('FREE');
+  return merged;
+}
+
+function ensureColorStates() {
+  state.form.colors.forEach((color) => {
+    color.sizeStates = color.sizeStates || {};
+    getColorSizeKeys_(color).forEach((sizeKey) => {
+      if (!color.sizeStates[sizeKey]) color.sizeStates[sizeKey] = { enabled: false, soldOut: false };
+    });
+    Object.keys(color.sizeStates).forEach((sizeKey) => {
+      if (!sizeKey || /^\[object object\]$/i.test(String(sizeKey || '').trim())) delete color.sizeStates[sizeKey];
+    });
+  });
+}
+
+function applyDefaultSizesToColor_(color) {
+  if (!color) return;
+  ensureColorStates();
+  getDefaultEnabledSizesForType_(state.form.productType).forEach((sizeKey) => {
+    color.sizeStates[sizeKey] = color.sizeStates[sizeKey] || { enabled: false, soldOut: false };
+    color.sizeStates[sizeKey].enabled = true;
+    color.sizeStates[sizeKey].soldOut = false;
+  });
+}
+
+function addColor(labelText) {
+  const label = String(labelText || '').trim();
+  if (!label) {
+    showToast('색상명을 입력해주세요.');
+    return;
+  }
+  if (state.form.colors.some((color) => color.label === label)) {
+    showToast('같은 색상이 이미 선택되어 있습니다.');
+    return;
+  }
+  const color = { id: uid('color'), value: label, label, soldOut: false, sizeStates: {} };
+  state.form.colors.push(color);
+  if (state.form.productType === '의류') applyDefaultSizesToColor_(color);
+  els.newColorInput.value = '';
+  renderForm();
+}
+
+function renderColorBoard() {
+  ensureColorStates();
+  if (!state.form.colors.length) {
+    els.colorBoard.innerHTML = '<div class="color-empty">색상을 선택하면 사이즈를 바로 선택할 수 있습니다.</div>';
+    return;
+  }
+  els.colorBoard.innerHTML = state.form.colors.map((color) => {
+    const sizeKeys = getColorSizeKeys_(color);
+    return `
+      <div class="color-card ${color.soldOut ? 'is-soldout' : ''}" data-color-id="${escapeHtml(color.id)}">
+        <div class="color-card-head">
+          <div class="color-card-title">
+            <strong>${escapeHtml(color.label)}</strong>
+            <div class="color-card-help">사이즈를 바로 선택하고 품절도 따로 줄 수 있습니다.</div>
+          </div>
+          <div class="color-card-actions">
+            <button class="tiny-btn" type="button" data-basic-use="${escapeHtml(color.id)}">기본 사용</button>
+            <button class="tiny-btn" type="button" data-clear-all="${escapeHtml(color.id)}">전체 해제</button>
+            <label class="tiny-check">
+              <input type="checkbox" ${color.soldOut ? 'checked' : ''} data-color-soldout="${escapeHtml(color.id)}">
+              색상 품절
+            </label>
+            <button class="tiny-btn danger" type="button" data-remove-color="${escapeHtml(color.id)}">삭제</button>
+          </div>
+        </div>
+        <div class="size-tile-grid">
+          ${sizeKeys.map((sizeKey) => {
+            const row = color.sizeStates[sizeKey] || { enabled: false, soldOut: false };
+            return `
+              <div class="size-tile ${row.enabled ? 'is-enabled' : ''} ${(row.soldOut || color.soldOut) ? 'is-soldout' : ''}">
+                <div class="size-tile-name">${escapeHtml(sizeKey)}</div>
+                <div class="size-tile-controls">
+                  <label class="mini-check">
+                    <input type="checkbox" ${row.enabled ? 'checked' : ''} data-size-enabled="${escapeHtml(color.id)}::${escapeHtml(sizeKey)}">
+                    사용
+                  </label>
+                  <label class="mini-check">
+                    <input type="checkbox" ${row.soldOut ? 'checked' : ''} ${row.enabled ? '' : 'disabled'} data-size-soldout="${escapeHtml(color.id)}::${escapeHtml(sizeKey)}">
+                    품절
+                  </label>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+        <div class="color-card-custom">
+          <input type="text" placeholder="사이즈 직접입력" data-color-size-input="${escapeHtml(color.id)}">
+          <button type="button" data-add-color-size="${escapeHtml(color.id)}">사이즈 추가</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderForm() {
+  els.nameInput.value = state.form.name || '';
+  els.priceInput.value = state.form.price || '';
+  els.typeInput.value = state.form.productType || '의류';
+  renderToggleChips();
+  buildCurrentStatusPills();
+  renderPreview();
+  renderCustomSizeChips();
+  renderColorSelector();
+  renderColorBoard();
+  els.editBanner.classList.toggle('show', !!state.editingId);
+  const bannerSpan = els.editBanner.querySelector('span');
+  if (bannerSpan) bannerSpan.textContent = '수정 모드입니다. 업데이트해주세요';
+  els.saveBtn.textContent = state.editingId ? '수정완료' : '상품등록';
+  els.resetBtn.textContent = state.editingId ? '취소' : '초기화';
+  els.deleteBtn.classList.add('hidden');
+}
+
+function summarizeColorSizeText_(product) {
+  const colors = Array.isArray(product.colorOptions) ? product.colorOptions : [];
+  const colorLabels = colors.map((color) => String(color.label || color.value || '').trim()).filter(Boolean);
+  const sizeLabels = [];
+  colors.forEach((color) => {
+    (color.sizes || []).forEach((size) => {
+      const normalized = normalizeSize(size);
+      if (!normalized) return;
+      if (sizeLabels.indexOf(normalized.label) === -1) sizeLabels.push(normalized.label);
+    });
+  });
+  return {
+    colors: colorLabels.join(', '),
+    sizes: sizeLabels.join(', ')
+  };
+}
+
+function renderProductList() {
+  renderStats();
+  renderListFilterRow();
+  const items = getFilteredProducts();
+  if (!items.length) {
+    els.productList.innerHTML = '<div class="empty-state">표시할 상품이 없습니다.</div>';
+    return;
+  }
+  els.productList.innerHTML = items.map((product) => {
+    const meta = summarizeColorSizeText_(product);
+    return `
+      <article class="product-card">
+        <div class="product-thumb">
+          <div class="photo-badges">${buildBadgeHtml({ flashSale: product.flashSale, soldOutSoon: product.isSoldOutSoon, soldOut: product.isSoldOut })}</div>
+          <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy">
+        </div>
+        <div class="product-body">
+          <div class="product-name">${escapeHtml(product.name)}</div>
+          <div class="product-price">${formatMoney(product.price)}</div>
+          <div class="product-meta-lines">
+            <div><strong>색상</strong> ${escapeHtml(meta.colors || '-')}</div>
+            <div><strong>사이즈</strong> ${escapeHtml(meta.sizes || '-')}</div>
+          </div>
+          <div class="product-actions">
+            <button class="btn secondary" type="button" data-edit-id="${escapeHtml(product.id)}">수정</button>
+            <button class="btn danger" type="button" data-delete-id="${escapeHtml(product.id)}">삭제</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+function editProduct(productId) {
+  const product = state.products.find((item) => item.id === productId);
+  if (!product) return;
+  state.editingId = product.id;
+  state.form = {
+    id: product.id,
+    name: product.name,
+    price: String(product.price),
+    productType: product.productType || '의류',
+    liveNote: '',
+    flashSale: !!product.flashSale,
+    soldOutSoon: !!product.isSoldOutSoon,
+    soldOut: !!product.isSoldOut,
+    imageUrl: product.image,
+    imageBase64: '',
+    fileName: '',
+    customSizes: '',
+    colors: (product.colorOptions || []).map((color) => {
+      const sizeStates = {};
+      (color.sizes || []).map(normalizeSize).filter(Boolean).forEach((size) => {
+        sizeStates[size.value] = { enabled: true, soldOut: !!size.soldOut };
+      });
+      return {
+        id: uid('color'),
+        value: color.value,
+        label: color.label,
+        soldOut: !!color.soldOut || ((color.sizes || []).length > 0 && (color.sizes || []).map(normalizeSize).filter(Boolean).every((size) => size.soldOut)),
+        sizeStates
+      };
+    })
+  };
+  renderForm();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  state.editingId = '';
+  state.form = getInitialForm();
+  els.cameraInput.value = '';
+  els.albumInput.value = '';
+  if (els.newColorInput) els.newColorInput.value = '';
+  renderForm();
+}
+
+function showSuccess(title, sub, tone = 'success') {
+  els.successTitle.textContent = title || '완료';
+  els.successSub.textContent = sub || '';
+  els.successOverlay.classList.toggle('danger', tone === 'danger');
+  els.successOverlay.classList.add('show');
+  els.successOverlay.setAttribute('aria-hidden', 'false');
+  if (successTimer) clearTimeout(successTimer);
+  successTimer = setTimeout(() => {
+    els.successOverlay.classList.remove('show');
+    els.successOverlay.classList.remove('danger');
+    els.successOverlay.setAttribute('aria-hidden', 'true');
+  }, 1200);
+}
+
+async function compressImageFile(file) {
+  const dataUrl = await fileToDataUrl(file);
+  const img = await loadImage(dataUrl);
+  const maxSide = 1080;
+  let width = img.width;
+  let height = img.height;
+  if (width > height && width > maxSide) {
+    height = Math.round(height * (maxSide / width));
+    width = maxSide;
+  } else if (height >= width && height > maxSide) {
+    width = Math.round(width * (maxSide / height));
+    height = maxSide;
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d', { alpha: false });
+  ctx.drawImage(img, 0, 0, width, height);
+  return canvas.toDataURL('image/jpeg', 0.76).split(',')[1];
+}
+
+async function deleteProduct(productId, triggerButton) {
+  const product = state.products.find((item) => item.id === productId);
+  if (!product) return;
+  if (!confirm('"' + product.name + '" 상품을 삭제할까요?')) return;
+  const button = triggerButton || null;
+  const originalText = button ? button.textContent : '';
+  if (button) {
+    button.disabled = true;
+    button.textContent = '삭제중...';
+  }
+  try {
+    const result = await postJson({ type: 'deleteProduct', id: product.id });
+    if (isFailure(result)) throw new Error(failureMessage(result, '삭제 실패'));
+    if (state.editingId === product.id) resetForm();
+    removeLocalProduct(product.id);
+    notifyCatalogChanged();
+    showSuccess('상품 삭제 완료', '목록에서 바로 제거되었습니다.', 'danger');
+    Promise.resolve().then(() => loadProducts(true)).catch((error) => console.error(error));
+  } catch (error) {
+    console.error(error);
+    showToast(error && error.message ? error.message : '상품 삭제 중 오류가 발생했습니다.');
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+}
+
+function installAdminUiPatch_() {
+  const brandStrong = document.querySelector('.brand-copy strong');
+  const brandSpan = document.querySelector('.brand-copy span');
+  if (brandStrong) brandStrong.textContent = '싸U 관리자';
+  if (brandSpan) brandSpan.textContent = '상품등록 · 수정';
+  const editBannerSpan = els.editBanner && els.editBanner.querySelector('span');
+  if (editBannerSpan) editBannerSpan.textContent = '수정 모드입니다. 업데이트해주세요';
+  if (els.editCancelBtn) els.editCancelBtn.style.display = 'none';
+  const optionSub = document.querySelector('.option-sub');
+  if (optionSub) optionSub.textContent = '색상을 선택하면 바로 아래에서 사이즈를 선택하고 색상/사이즈별 품절 설정을 할 수 있습니다.';
+  const shopBtn = els.openShopBtn;
+  if (shopBtn) {
+    shopBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5 5.4 5h13.2L20 9.5"></path><path d="M5 10.5h14V19H5z"></path><path d="M9.5 19v-4.5h5V19"></path></svg>';
+  }
+}
+
+function bindExtraAdminEvents_() {
+  if (document.body.dataset.adminExtraBound === '1') return;
+  document.body.dataset.adminExtraBound = '1';
+  document.addEventListener('click', (event) => {
+    const basicUseBtn = event.target.closest('[data-basic-use]');
+    if (basicUseBtn) {
+      const color = state.form.colors.find((item) => item.id === basicUseBtn.getAttribute('data-basic-use'));
+      if (color) {
+        ensureColorStates();
+        getDefaultEnabledSizesForType_(state.form.productType).forEach((sizeKey) => {
+          color.sizeStates[sizeKey] = color.sizeStates[sizeKey] || { enabled: false, soldOut: false };
+          color.sizeStates[sizeKey].enabled = true;
+          color.sizeStates[sizeKey].soldOut = false;
+        });
+        renderColorBoard();
+      }
+      return;
+    }
+    const addColorSizeBtn = event.target.closest('[data-add-color-size]');
+    if (addColorSizeBtn) {
+      const colorId = addColorSizeBtn.getAttribute('data-add-color-size');
+      const input = document.querySelector('[data-color-size-input="' + colorId + '"]');
+      const color = state.form.colors.find((item) => item.id === colorId);
+      const raw = input ? String(input.value || '').trim() : '';
+      if (!color || !raw) {
+        showToast('추가할 사이즈를 입력해주세요.');
+        return;
+      }
+      if (!color.sizeStates[raw]) color.sizeStates[raw] = { enabled: true, soldOut: false };
+      color.sizeStates[raw].enabled = true;
+      color.sizeStates[raw].soldOut = false;
+      input.value = '';
+      renderColorBoard();
+      return;
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    const input = event.target.closest('[data-color-size-input]');
+    if (!input || event.key !== 'Enter') return;
+    event.preventDefault();
+    const button = input.parentElement && input.parentElement.querySelector('[data-add-color-size]');
+    if (button) button.click();
+  });
+}
+
+const __adminBaseInit__ = init;
+init = function() {
+  installAdminUiPatch_();
+  __adminBaseInit__();
+  installAdminUiPatch_();
+  bindExtraAdminEvents_();
+  renderForm();
+  renderProductList();
+};
+
 
   init();
 })();
