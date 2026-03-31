@@ -1981,7 +1981,7 @@ input,textarea,select{font-size:16px}
           </div>
           <div class="field">
             <label for="profileName">이름</label>
-            <input id="profileName" type="text" maxlength="20" placeholder="이름">
+            <input id="profileName" type="text" maxlength="20" placeholder="성함">
           </div>
           <div class="field">
             <label for="profilePhone">연락처</label>
@@ -6157,7 +6157,7 @@ function renderSuccess(order = state.lastSuccessOrder) {
     <div class="success-block-divider"></div>
     <div class="success-block-title">배송지 정보</div>
     <div class="success-info-item"><b>닉네임</b><span>${escapeHtml(order.customer && order.customer.nickname || '')}</span></div>
-    <div class="success-info-item"><b>이름</b><span>${escapeHtml(order.customer && order.customer.name || '')}</span></div>
+    <div class="success-info-item"><b>수령인</b><span>${escapeHtml(order.customer && order.customer.name || '')}</span></div>
     <div class="success-info-item"><b>연락처</b><span>${escapeHtml(order.customer && order.customer.phone || '')}</span></div>
     <div class="success-info-item address-row"><b>주소</b><span>${escapeHtml(getFullAddress(order.customer))}</span></div>
   `;
@@ -6660,7 +6660,7 @@ function customerSummaryHtml(customer = state.customer) {
   }
   const rows = [];
   if (source.nickname) rows.push(`<div class="info-row"><b>닉네임</b><span>${escapeHtml(source.nickname)}</span></div>`);
-  if (source.name) rows.push(`<div class="info-row"><b>이름</b><span>${escapeHtml(source.name)}</span></div>`);
+  if (source.name) rows.push(`<div class="info-row"><b>수령인</b><span>${escapeHtml(source.name)}</span></div>`);
   if (source.phone) rows.push(`<div class="info-row"><b>연락처</b><span>${escapeHtml(source.phone)}</span></div>`);
   if (getFullAddress(source)) rows.push(`<div class="info-row address-row"><b>주소</b><span>${escapeHtml(getFullAddress(source))}</span></div>`);
   return `<div class="info-summary">${rows.join('')}</div>`;
@@ -7064,7 +7064,7 @@ function renderSuccess(order = state.lastSuccessOrder) {
     <div class="success-info-section">
       <div class="success-info-heading">배송지 정보</div>
       <div class="success-info-item"><b>닉네임</b><span>${escapeHtml(order.customer && order.customer.nickname || '')}</span></div>
-      <div class="success-info-item"><b>이름</b><span>${escapeHtml(order.customer && order.customer.name || '')}</span></div>
+      <div class="success-info-item"><b>수령인</b><span>${escapeHtml(order.customer && order.customer.name || '')}</span></div>
       <div class="success-info-item"><b>연락처</b><span>${escapeHtml(order.customer && order.customer.phone || '')}</span></div>
       <div class="success-info-item address-row"><b>주소</b><span>${escapeHtml(getFullAddress(order.customer))}</span></div>
     </div>
@@ -8101,350 +8101,375 @@ function applyMarch31RequestedFinalAdjustments_() {
 }
 
 
-function applyMarch31FinalUserFixes_() {
-  if (document.body.dataset.march31FinalUserFixesApplied === '1') return;
-  document.body.dataset.march31FinalUserFixesApplied = '1';
 
-  if (!document.getElementById('march31FinalUserFixesStyle')) {
-    const style = document.createElement('style');
-    style.id = 'march31FinalUserFixesStyle';
-    style.textContent = `
-      .bottom-nav .bottom-nav-inner{
-        grid-template-columns:repeat(4,minmax(0,1fr))!important;
-        gap:4px!important;
-        align-items:stretch!important;
+function buildMarch31FollowupBroadcastMarkup_() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.9 8.55v6.9L15.6 12l-5.7-3.45Z" fill="currentColor" stroke="none"></path><path d="M4.45 7.75C3 8.95 2.25 10.43 2.25 12s.75 3.05 2.2 4.25"></path><path d="M7.3 9.55C6.35 10.22 5.85 11.08 5.85 12s.5 1.78 1.45 2.45"></path><path d="M18.9 7.75c1.45 1.2 2.2 2.68 2.2 4.25s-.75 3.05-2.2 4.25"></path><path d="M16.05 9.55c.85.67 1.3 1.53 1.3 2.45s-.45 1.78-1.3 2.45"></path></svg><span class="bottom-nav-label">방송보기</span>';
+}
+
+function ensureMarch31FollowupHeroVisibility_() {
+  const hero = document.querySelector('.hero');
+  const heroCopy = document.querySelector('.hero .hero-copy');
+  const socialRow = document.querySelector('.hero .social-row');
+
+  if (hero) {
+    hero.style.display = 'block';
+    hero.style.visibility = 'visible';
+    hero.style.opacity = '1';
+  }
+  if (heroCopy) {
+    if (!String(heroCopy.textContent || '').trim()) {
+      heroCopy.textContent = '지금 방송 중인 상품을 만나보세요.';
+    }
+    heroCopy.style.display = 'block';
+    heroCopy.style.visibility = 'visible';
+    heroCopy.style.opacity = '1';
+  }
+  if (socialRow) {
+    socialRow.style.display = 'flex';
+    socialRow.style.visibility = 'visible';
+    socialRow.style.opacity = '1';
+  }
+
+  if (els.openYoutubeBtn) {
+    els.openYoutubeBtn.style.display = 'inline-flex';
+    els.openYoutubeBtn.style.visibility = 'visible';
+    els.openYoutubeBtn.style.opacity = '1';
+    if (!String(els.openYoutubeBtn.innerHTML || '').trim()) {
+      els.openYoutubeBtn.innerHTML = '<svg class="social-youtube-svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect class="youtube-inner" x="12" y="18" width="40" height="28" rx="10"></rect><path class="youtube-play" d="M29 24.5 41 32 29 39.5V24.5Z"></path></svg><span class="sr-only">유튜브 방송보기</span>';
+    }
+  }
+  if (els.openTiktokBtn) {
+    els.openTiktokBtn.style.display = 'inline-flex';
+    els.openTiktokBtn.style.visibility = 'visible';
+    els.openTiktokBtn.style.opacity = '1';
+    if (!String(els.openTiktokBtn.innerHTML || '').trim()) {
+      els.openTiktokBtn.innerHTML = '<svg class="social-tiktok-svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g transform="translate(4 0.6)"><path class="tiktok-note" d="M38.4 10.2c1.7 4.3 5 7.7 9.3 9.5v7.7c-3.6-.2-7-1.4-10.1-3.5v13.2c0 8.5-6.7 15.4-15 15.4S7.6 45.5 7.6 37s6.7-15.4 15-15.4c1 0 2 .1 2.9.3v7.9a7.7 7.7 0 0 0-2.9-.6c-4.1 0-7.4 3.4-7.4 7.6s3.3 7.6 7.4 7.6 7.4-3.4 7.4-7.6V10.2h8.4z"></path></g></svg><span class="sr-only">틱톡 방송보기</span>';
+    }
+  }
+}
+
+function submitBridgePayloadViaFormFast_(payload, timeoutMs, sharedState) {
+  ensureApiConfigured();
+  const frame = ensureBridgeFrame();
+  const requestId = 'req_' + uid('req');
+
+  return new Promise((resolve, reject) => {
+    const useShared = !!(sharedState && sharedState.form && sharedState.input && !sharedState.busy);
+    let form = null;
+    let input = null;
+    let cleanupForm = false;
+
+    if (useShared) {
+      sharedState.busy = true;
+      form = sharedState.form;
+      input = sharedState.input;
+    } else {
+      form = document.createElement('form');
+      form.method = 'POST';
+      form.style.display = 'none';
+      input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'payload';
+      form.appendChild(input);
+      document.body.appendChild(form);
+      cleanupForm = true;
+    }
+
+    form.action = CONFIG.gasWebAppUrl;
+    form.target = frame.name;
+    input.value = JSON.stringify(Object.assign({}, payload, {
+      requestId,
+      responseMode: 'postMessage',
+      origin: window.location.origin
+    }));
+
+    let timer = null;
+
+    function cleanup() {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('message', onMessage);
+      if (cleanupForm) {
+        if (form.parentNode) form.parentNode.removeChild(form);
+      } else if (sharedState) {
+        sharedState.busy = false;
       }
-      .bottom-nav .bottom-nav-btn{
-        min-height:68px!important;
-        padding:6px 2px 7px!important;
-        border-radius:18px!important;
-        display:grid!important;
-        grid-template-rows:30px auto!important;
-        justify-items:center!important;
-        align-content:center!important;
-        row-gap:6px!important;
-        text-align:center!important;
-      }
-      .bottom-nav .bottom-nav-icon-wrap{
-        width:30px!important;
-        height:30px!important;
-        display:inline-flex!important;
-        align-items:center!important;
-        justify-content:center!important;
-        line-height:0!important;
-        transform:translateX(0)!important;
-      }
-      .bottom-nav .bottom-nav-btn svg{
-        width:27px!important;
-        height:27px!important;
-        display:block!important;
-        overflow:visible!important;
-      }
-      .bottom-nav .bottom-nav-btn .bottom-nav-label{
-        display:block!important;
-        width:100%!important;
-        margin:0!important;
-        font-size:11.8px!important;
-        line-height:1.12!important;
-        font-weight:900!important;
-        letter-spacing:-.02em!important;
-        text-align:center!important;
-        white-space:nowrap!important;
-      }
-      #openOrdersBtn .bottom-nav-icon-wrap,
-      #openDepositBtn .bottom-nav-icon-wrap,
-      #openBroadcastBottomBtn .bottom-nav-icon-wrap,
-      #openProfileBtn .bottom-nav-icon-wrap{
-        justify-self:center!important;
-      }
-      #depositSheet .account-copy span{
-        font-size:15px!important;
-        line-height:1.55!important;
-        font-weight:900!important;
-      }
-      @media (max-width:520px){
-        .bottom-nav .bottom-nav-btn{
-          min-height:66px!important;
-          grid-template-rows:29px auto!important;
-          row-gap:5px!important;
+    }
+
+    function onMessage(event) {
+      const data = normalizeBridgeMessageData(event && event.data);
+      if (!data || data.source !== 'SSU_GAS_BRIDGE' || data.requestId !== requestId) return;
+      cleanup();
+      resolve(data.response || { ok: false, message: '응답 데이터가 비어 있습니다.' });
+    }
+
+    window.addEventListener('message', onMessage);
+    timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('서버 응답 시간이 초과되었습니다.'));
+    }, Number(timeoutMs || 60000));
+
+    form.submit();
+  });
+}
+
+function installMarch31FollowupFastBridge_() {
+  if (window.__ssuFastBridgeInstalled) return;
+  window.__ssuFastBridgeInstalled = true;
+
+  const sharedForm = document.createElement('form');
+  sharedForm.method = 'POST';
+  sharedForm.style.display = 'none';
+
+  const sharedInput = document.createElement('input');
+  sharedInput.type = 'hidden';
+  sharedInput.name = 'payload';
+
+  sharedForm.appendChild(sharedInput);
+  document.body.appendChild(sharedForm);
+
+  const sharedState = {
+    form: sharedForm,
+    input: sharedInput,
+    busy: false
+  };
+
+  window.__ssuFastBridgeState = sharedState;
+  apiPost = function(payload, timeoutMs = 60000) {
+    return submitBridgePayloadViaFormFast_(payload, timeoutMs, window.__ssuFastBridgeState);
+  };
+}
+
+async function submitOrderFollowup_() {
+  if (state.submitting) return;
+  collapseKeyboard_();
+
+  const checkoutItems = getCheckoutItems();
+  if (!checkoutItems.length) {
+    showToast('주문할 상품이 없습니다.');
+    return;
+  }
+
+  state.customer = readCheckoutCustomerFromDom_();
+  saveStorage();
+  renderCheckout();
+  renderCart();
+  renderOrders();
+  renderProfileSummary();
+
+  if (!hasCompleteCustomer(state.customer)) {
+    showToast('닉네임, 이름, 연락처, 주소를 모두 입력해주세요.');
+    queueFocusCheckoutField_(!normalizeCustomer(state.customer).nickname ? 'checkoutNicknameInput' : (!normalizeCustomer(state.customer).addressDetail ? 'checkoutAddressDetailInput' : 'checkoutNameInput'));
+    return;
+  }
+
+  const createdAt = Date.now();
+  const subtotal = getSubtotal(checkoutItems);
+  const shipping = getCheckoutPreviewShipping(state.customer, checkoutItems);
+  const payload = {
+    eventId: uid('ev'),
+    orderId: uid('oid'),
+    orderTime: formatOrderTime(),
+    broadcastDate: getBroadcastDateKey(),
+    eventType: 'order',
+    customer: normalizeCustomer(state.customer),
+    items: checkoutItems.map((item) => ({
+      itemId: item.id,
+      productId: item.productId,
+      productName: item.name,
+      color: cleanColorLabel(item.color),
+      size: item.size,
+      qty: Number(item.qty || 0),
+      price: Number(item.price || 0),
+      image: item.image || ''
+    })),
+    sum: subtotal,
+    shipping,
+    total: subtotal + shipping,
+    createdAt
+  };
+
+  try {
+    state.submitting = true;
+    els.submitOrderBtn.disabled = true;
+    showPersistentActionPopup_('주문 요청을 처리하고 있습니다.', '잠시만 기다려주세요.', 'processing', '…');
+    const result = await apiPost(payload);
+    if (result && result.ok === false) throw new Error(result.message || '주문 저장에 실패했습니다.');
+
+    const popupPromise = showActionPopup({ title: '주문이 완료되었습니다', message: '주문 완료 내역을 확인해주세요.' });
+    await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+    const record = buildLocalOrderRecord(payload);
+    state.localOrders = [record].concat((state.localOrders || []).filter((order) => String(order.orderId || '') !== String(record.orderId || '')));
+    if (state.checkoutContext && state.checkoutContext.mode === 'cart') state.cart = [];
+    setCheckoutContext('cart');
+    saveStorage();
+
+    const saved = state.localOrders.find((order) => order.localId === record.localId) || record;
+    state.lastSuccessOrder = JSON.parse(JSON.stringify(saved));
+
+    renderCartCount();
+    renderCart();
+    renderCheckout();
+    renderOrders();
+    renderSuccess(saved);
+    openSheet('successSheet');
+    await popupPromise;
+  } catch (error) {
+    console.error(error);
+    els.actionPopup.classList.remove('show');
+    showToast(error && error.message ? error.message : '주문 중 오류가 발생했습니다.');
+  } finally {
+    state.submitting = false;
+    renderCheckout();
+  }
+}
+
+function applyMarch31FollowupClientPatch_() {
+  if (document.body.dataset.march31FollowupClientPatchApplied !== '1') {
+    document.body.dataset.march31FollowupClientPatchApplied = '1';
+
+    if (!document.getElementById('march31FollowupClientPatchStyle')) {
+      const style = document.createElement('style');
+      style.id = 'march31FollowupClientPatchStyle';
+      style.textContent = `
+        .hero,
+        .hero .hero-copy,
+        .hero .social-row,
+        .hero .social-icon-btn{
+          visibility:visible!important;
+          opacity:1!important;
         }
-        .bottom-nav .bottom-nav-icon-wrap{
-          width:29px!important;
-          height:29px!important;
+        .hero .hero-copy{
+          display:block!important;
         }
-        .bottom-nav .bottom-nav-btn svg{
+        .hero .social-row{
+          display:flex!important;
+        }
+        .bottom-nav-btn{
+          display:flex!important;
+          flex-direction:column!important;
+          align-items:center!important;
+          justify-content:center!important;
+          text-align:center!important;
+          gap:6px!important;
+          padding:0 2px!important;
+        }
+        .bottom-nav-btn > svg,
+        .bottom-nav-btn > .bottom-nav-icon-media{
+          display:block!important;
+          flex:0 0 auto!important;
+          line-height:0!important;
+          margin:0 auto!important;
+        }
+        .bottom-nav-btn > span:last-child,
+        .bottom-nav-btn > .bottom-nav-label{
+          display:block!important;
+          width:100%!important;
+          text-align:center!important;
+          line-height:1.12!important;
+          white-space:nowrap!important;
+        }
+        #openOrdersBtn svg,
+        #openProfileBtn svg{
           width:26px!important;
           height:26px!important;
         }
-        .bottom-nav .bottom-nav-btn .bottom-nav-label{
-          font-size:11.2px!important;
+        #openDepositBtn .bottom-nav-icon-media{
+          width:27px!important;
+          height:27px!important;
+          flex-basis:27px!important;
         }
-        #depositSheet .account-copy span{
+        #openDepositBtn .bottom-nav-icon-image.deposit{
+          width:27px!important;
+          height:auto!important;
+        }
+        #openBroadcastBottomBtn svg{
+          width:27px!important;
+          height:27px!important;
+          transform:translateX(.1px)!important;
+        }
+        #depositSheet #depositBankText{
+          display:grid!important;
+          gap:3px!important;
+        }
+        #depositSheet #depositBankText .account-bank-line{
+          font-size:15px!important;
+          line-height:1.4!important;
+          font-weight:950!important;
+        }
+        #depositSheet #depositBankText .account-holder-line{
           font-size:14px!important;
+          line-height:1.38!important;
+          font-weight:900!important;
         }
+        @media (max-width:520px){
+          #openDepositBtn .bottom-nav-icon-media{
+            width:26.4px!important;
+            height:26.4px!important;
+            flex-basis:26.4px!important;
+          }
+          #openDepositBtn .bottom-nav-icon-image.deposit,
+          #openBroadcastBottomBtn svg{
+            width:26.4px!important;
+            height:26.4px!important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    installMarch31FollowupFastBridge_();
+
+    if (els.submitOrderBtn && !els.submitOrderBtn.dataset.followupBound) {
+      const clonedSubmitBtn = els.submitOrderBtn.cloneNode(true);
+      clonedSubmitBtn.dataset.followupBound = '1';
+      els.submitOrderBtn.replaceWith(clonedSubmitBtn);
+      els.submitOrderBtn = clonedSubmitBtn;
+      submitOrder = submitOrderFollowup_;
+      clonedSubmitBtn.addEventListener('click', submitOrderFollowup_);
+    }
+
+    if (els.openBroadcastBottomBtn) {
+      els.openBroadcastBottomBtn.innerHTML = buildMarch31FollowupBroadcastMarkup_();
+    }
+
+    [els.openOrdersBtn, els.openDepositBtn, els.openBroadcastBottomBtn, els.openProfileBtn].forEach((btn) => {
+      if (!btn) return;
+      const label = btn.querySelector('.bottom-nav-label') || btn.querySelector('span:last-of-type');
+      if (label && !label.classList.contains('bottom-nav-label')) {
+        label.classList.add('bottom-nav-label');
       }
-    `;
-    document.head.appendChild(style);
-  }
+    });
 
-  const setBottomNavButton_ = (button, label, svgMarkup) => {
-    if (!button) return;
-    button.innerHTML = '<span class="bottom-nav-icon-wrap" aria-hidden="true">' + svgMarkup + '</span><span class="bottom-nav-label">' + label + '</span>';
-  };
-
-  setBottomNavButton_(document.getElementById('openOrdersBtn'), '주문내역', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7h11"></path><path d="M8 12h11"></path><path d="M8 17h11"></path><circle cx="4.8" cy="7" r="0.9" fill="currentColor" stroke="none"></circle><circle cx="4.8" cy="12" r="0.9" fill="currentColor" stroke="none"></circle><circle cx="4.8" cy="17" r="0.9" fill="currentColor" stroke="none"></circle></svg>');
-  setBottomNavButton_(document.getElementById('openDepositBtn'), '입금계좌', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.2" y="6.6" width="17.6" height="10.8" rx="2.6"></rect><path d="M3.9 10.4h16.2"></path><path d="M7 14h4.7"></path></svg>');
-  setBottomNavButton_(document.getElementById('openBroadcastBottomBtn'), '방송보기', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.15 8.2v7.6L15.35 12 9.15 8.2Z" fill="currentColor" stroke="none"></path><path d="M4.15 8.35c-1.05 1.05-1.6 2.31-1.6 3.65 0 1.34.55 2.6 1.6 3.65"></path><path d="M6.65 9.65c-.67.67-1 1.47-1 2.35 0 .88.33 1.68 1 2.35"></path><path d="M19.85 8.35c1.05 1.05 1.6 2.31 1.6 3.65 0 1.34-.55 2.6-1.6 3.65"></path><path d="M17.35 9.65c.67.67 1 1.47 1 2.35 0 .88-.33 1.68-1 2.35"></path></svg>');
-  setBottomNavButton_(document.getElementById('openProfileBtn'), '내 정보', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.1" r="3.15"></circle><path d="M5 18.25c1.65-2.7 4.25-4.25 7-4.25s5.35 1.55 7 4.25"></path></svg>');
-
-  if (els.profileName) els.profileName.placeholder = '이름';
-  const profileNameLabel = document.querySelector('label[for="profileName"]');
-  if (profileNameLabel) profileNameLabel.textContent = '이름';
-
-  const parseCustomerPhoneValid_ = (customer) => {
-    const source = normalizeCustomer(customer || {});
-    const length = digits(source.phone || '').length;
-    return length === 10 || length === 11;
-  };
-
-  const getFirstMissingProfileFieldKey_ = (customer) => {
-    const source = normalizeCustomer(customer || {});
-    if (!source.nickname) return 'nickname';
-    if (!source.name) return 'name';
-    if (!source.phone) return 'phone';
-    if (!parseCustomerPhoneValid_(source)) return 'phoneInvalid';
-    if (!source.address) return 'address';
-    if (!source.addressDetail) return 'addressDetail';
-    return '';
-  };
-
-  const focusProfileFieldByKey_ = (key) => {
-    const targetMap = {
-      nickname: els.profileNickname,
-      name: els.profileName,
-      phone: els.profilePhone,
-      phoneInvalid: els.profilePhone,
-      address: els.profileAddressSearchBtn || els.profileAddress,
-      addressDetail: els.profileAddressDetail
-    };
-    const target = targetMap[key];
-    if (!target || typeof target.focus !== 'function') return;
-    try { target.focus({ preventScroll: true }); } catch (error) { target.focus(); }
-  };
-
-  const getCheckoutFieldIdByKey_ = (key) => {
-    const map = {
-      nickname: 'checkoutNicknameInput',
-      name: 'checkoutNameInput',
-      phone: 'checkoutPhoneInput',
-      phoneInvalid: 'checkoutPhoneInput',
-      address: 'checkoutAddressInput',
-      addressDetail: 'checkoutAddressDetailInput'
-    };
-    return map[key] || '';
-  };
-
-  const focusCheckoutFieldByKey_ = (key) => {
-    if (key === 'address') {
-      requestAnimationFrame(() => {
-        const addressBtn = document.getElementById('checkoutAddressSearchBtn');
-        if (addressBtn && typeof addressBtn.focus === 'function') {
-          try { addressBtn.focus({ preventScroll: true }); } catch (error) { addressBtn.focus(); }
-        }
+    if (!window.__ssuHeroVisibilityGuardInstalled) {
+      window.__ssuHeroVisibilityGuardInstalled = true;
+      const runHeroGuard = () => requestAnimationFrame(ensureMarch31FollowupHeroVisibility_);
+      window.addEventListener('pageshow', runHeroGuard, { passive: true });
+      window.addEventListener('focus', runHeroGuard, { passive: true });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) runHeroGuard();
       });
-      return;
+      const baseRenderProductsFollowup = renderProducts;
+      renderProducts = function() {
+        const result = baseRenderProductsFollowup.apply(this, arguments);
+        runHeroGuard();
+        return result;
+      };
+      const baseLoadProductsFollowup = loadProducts;
+      loadProducts = async function(force = false) {
+        const result = await baseLoadProductsFollowup.apply(this, arguments);
+        runHeroGuard();
+        return result;
+      };
+      setTimeout(runHeroGuard, 0);
+      setTimeout(runHeroGuard, 180);
+      setTimeout(runHeroGuard, 720);
     }
-    const fieldId = getCheckoutFieldIdByKey_(key);
-    if (fieldId) queueFocusCheckoutField_(fieldId);
-  };
-
-  const getCustomerMissingToast_ = (key) => {
-    if (key === 'phoneInvalid') return '연락처를 다시 확인해주세요.';
-    return '닉네임, 이름, 연락처, 주소, 상세 주소를 모두 입력해주세요.';
-  };
-
-  const refreshCheckoutSubmitState_ = () => {
-    if (!els.submitOrderBtn) return;
-    const checkoutItems = getCheckoutItems();
-    const subtotal = getSubtotal(checkoutItems);
-    const shipping = getCheckoutPreviewShipping(state.customer, checkoutItems);
-    const total = subtotal + shipping;
-    if (els.checkoutSubtotalText) els.checkoutSubtotalText.textContent = formatMoney(subtotal);
-    if (els.checkoutShippingText) els.checkoutShippingText.textContent = formatMoney(shipping);
-    if (els.checkoutTotalText) els.checkoutTotalText.textContent = formatMoney(total);
-    els.submitOrderBtn.textContent = checkoutItems.length ? `${formatMoney(total)} 주문하기` : '주문하기';
-    els.submitOrderBtn.disabled = !checkoutItems.length || !hasCompleteCustomer(state.customer);
-  };
-
-  hasCompleteCustomer = function(customer = state.customer) {
-    const source = normalizeCustomer(customer || {});
-    return !!(source.nickname && source.name && source.phone && source.address && source.addressDetail && parseCustomerPhoneValid_(source));
-  };
-
-  customerSummaryHtml = function(customer = state.customer) {
-    const source = normalizeCustomer(customer || {});
-    if (!hasCustomerData(source)) {
-      return '<div class="info-placeholder">저장된 배송지 정보가 없습니다.</div>';
-    }
-    const rows = [];
-    if (source.nickname) rows.push(`<div class="info-row"><b>닉네임</b><span>${escapeHtml(source.nickname)}</span></div>`);
-    if (source.name) rows.push(`<div class="info-row"><b>이름</b><span>${escapeHtml(source.name)}</span></div>`);
-    if (source.phone) rows.push(`<div class="info-row"><b>연락처</b><span>${escapeHtml(source.phone)}</span></div>`);
-    if (getFullAddress(source)) rows.push(`<div class="info-row address-row"><b>주소</b><span>${escapeHtml(getFullAddress(source))}</span></div>`);
-    return `<div class="info-summary">${rows.join('')}</div>`;
-  };
-
-  renderProfileSummary = function() {
-    if (!hasCustomerData(state.customer)) {
-      els.profileSummaryCard.innerHTML = '<div class="info-placeholder">저장된 내 정보가 없습니다.<br>수정 버튼을 눌러 배송지 정보를 입력해주세요.</div>';
-    } else {
-      els.profileSummaryCard.innerHTML = customerSummaryHtml(state.customer);
-    }
-    if (els.profileEditBtn) els.profileEditBtn.textContent = '수정';
-  };
-
-  const originalNormalizeProductFinal_ = normalizeProduct;
-  normalizeProduct = function(raw) {
-    const product = originalNormalizeProductFinal_(raw);
-    const optionBag = raw && raw.options && typeof raw.options === 'object' ? raw.options : {};
-    product.createdAt = String((raw && (raw.createdAt || raw.registeredAt)) || optionBag.createdAt || '').trim();
-    product.updatedAt = String((raw && (raw.updatedAt || raw.modifiedAt)) || optionBag.updatedAt || '').trim();
-    return product;
-  };
-
-  const parseProductSortTime_ = (value) => {
-    const text = String(value || '').trim();
-    if (!text) return 0;
-    if (/^\d{13}$/.test(text)) return Number(text) || 0;
-    if (/^\d{10}$/.test(text)) return (Number(text) || 0) * 1000;
-    const parsed = Date.parse(text);
-    return Number.isFinite(parsed) ? parsed : 0;
-  };
-
-  sortProducts = function(items) {
-    return items.slice().map((item, index) => Object.assign({ _inputIndex: index }, item)).sort((a, b) => {
-      const orderDiff = Number(b.displayOrder || 0) - Number(a.displayOrder || 0);
-      if (orderDiff) return orderDiff;
-      const aCreated = parseProductSortTime_(a.createdAt);
-      const bCreated = parseProductSortTime_(b.createdAt);
-      if (aCreated || bCreated) {
-        if (aCreated !== bCreated) return bCreated - aCreated;
-      }
-      return Number(a._inputIndex || 0) - Number(b._inputIndex || 0);
-    }).map((item) => {
-      delete item._inputIndex;
-      return item;
-    });
-  };
-
-  syncCheckoutCustomerFromEvent_ = function(target) {
-    if (!target) return;
-    const next = normalizeCustomer(state.customer);
-    if (target.id === 'checkoutNicknameInput') next.nickname = String(target.value || '').trim();
-    if (target.id === 'checkoutNameInput') next.name = String(target.value || '').trim();
-    if (target.id === 'checkoutPhoneInput') {
-      next.phone = formatPhone(target.value || '');
-      target.value = next.phone;
-    }
-    if (target.id === 'checkoutAddressDetailInput') next.addressDetail = String(target.value || '').trim();
-    state.customer = next;
-    saveStorage();
-    refreshCheckoutSubmitState_();
-  };
-
-  const originalSaveProfileFinal_ = saveProfile;
-  saveProfile = async function() {
-    const candidate = normalizeCustomer({
-      nickname: els.profileNickname ? els.profileNickname.value : '',
-      name: els.profileName ? els.profileName.value : '',
-      phone: els.profilePhone ? els.profilePhone.value : '',
-      address: els.profileAddress ? els.profileAddress.value : '',
-      addressDetail: els.profileAddressDetail ? els.profileAddressDetail.value : '',
-      memo: '',
-      zonecode: (els.profileAddress && els.profileAddress.dataset.zonecode) || ''
-    });
-    const missingKey = getFirstMissingProfileFieldKey_(candidate);
-    if (missingKey) {
-      showToast(getCustomerMissingToast_(missingKey));
-      focusProfileFieldByKey_(missingKey);
-      refreshCheckoutSubmitState_();
-      return;
-    }
-    return originalSaveProfileFinal_.apply(this, arguments);
-  };
-
-  const originalSubmitOrderFinal_ = submitOrder;
-  submitOrder = async function() {
-    const missingKey = getFirstMissingProfileFieldKey_(state.customer);
-    if (missingKey) {
-      showToast(getCustomerMissingToast_(missingKey));
-      focusCheckoutFieldByKey_(missingKey);
-      refreshCheckoutSubmitState_();
-      return;
-    }
-    return originalSubmitOrderFinal_.apply(this, arguments);
-  };
-
-  renderSuccess = function(order = state.lastSuccessOrder) {
-    if (!order) return;
-    state.lastSuccessOrder = order;
-    els.successInfoCard.innerHTML = `
-      <div class="success-info-section">
-        <div class="success-info-heading">주문 정보</div>
-        <div class="success-info-item"><b>주문 일시</b><span>${escapeHtml(order.orderTime || '')}</span></div>
-        <div class="success-info-item"><b>주문 번호</b><span>${escapeHtml(order.orderId || '')}</span></div>
-      </div>
-      <div class="success-info-section">
-        <div class="success-info-heading">배송지 정보</div>
-        <div class="success-info-item"><b>닉네임</b><span>${escapeHtml(order.customer && order.customer.nickname || '')}</span></div>
-        <div class="success-info-item"><b>이름</b><span>${escapeHtml(order.customer && order.customer.name || '')}</span></div>
-        <div class="success-info-item"><b>연락처</b><span>${escapeHtml(order.customer && order.customer.phone || '')}</span></div>
-        <div class="success-info-item address-row"><b>주소</b><span>${escapeHtml(getFullAddress(order.customer))}</span></div>
-      </div>
-    `;
-    els.successItemList.innerHTML = (order.items || []).map((item) => `
-      <div class="checkout-item">
-        <div class="checkout-thumb"><img src="${escapeHtml(item.image || CONFIG.logoSrc)}" alt="${escapeHtml(item.name)}"></div>
-        <div>
-          <div class="checkout-name">${escapeHtml(item.name)}</div>
-          <div class="checkout-meta">${escapeHtml(formatOptionSummary(item))}</div>
-          <div class="checkout-price">${formatMoney(Number(item.price || 0) * Number(item.qty || 0))}</div>
-        </div>
-      </div>
-    `).join('') + `
-      <div class="success-summary-box">
-        <div class="summary-row"><span>상품 합계</span><strong>${formatMoney(order.subtotal || 0)}</strong></div>
-        <div class="summary-row"><span>배송비</span><strong>${formatMoney(order.shipping || 0)}</strong></div>
-        <div class="summary-row total"><span>총 주문 금액</span><strong>${formatMoney(order.total || 0)}</strong></div>
-      </div>
-    `;
-  };
-
-  if (els.profileSaveBtn && !els.profileSaveBtn.dataset.finalSaveInterceptBound) {
-    els.profileSaveBtn.dataset.finalSaveInterceptBound = '1';
-    els.profileSaveBtn.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      saveProfile();
-    }, true);
   }
 
-  if (els.submitOrderBtn && !els.submitOrderBtn.dataset.finalSubmitInterceptBound) {
-    els.submitOrderBtn.dataset.finalSubmitInterceptBound = '1';
-    els.submitOrderBtn.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      submitOrder();
-    }, true);
-  }
-
-  state.products = sortProducts((state.products || []).map((item) => normalizeProduct(item)));
-  renderFilters();
-  renderProducts();
-  renderProfileSummary();
-  refreshCheckoutSubmitState_();
-  if (state.lastSuccessOrder) renderSuccess(state.lastSuccessOrder);
-  Promise.resolve().then(() => loadProducts(true)).catch((error) => console.error(error));
+  ensureMarch31FollowupHeroVisibility_();
+  renderBankAccountText();
+  renderCheckout();
 }
 
   setupHomeButtonPressFeedback();
@@ -8454,7 +8479,7 @@ function applyMarch31FinalUserFixes_() {
   applyLatestUserRequestedPatch_();
   applyMarch30RequestedFinalAdjustments_();
   applyMarch31RequestedFinalAdjustments_();
-  applyMarch31FinalUserFixes_();
+  applyMarch31FollowupClientPatch_();
 })();
 
   </script>
