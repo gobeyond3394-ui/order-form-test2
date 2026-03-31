@@ -8481,6 +8481,7 @@ function applyMarch31FollowupClientPatch_() {
   applyMarch31RequestedFinalAdjustments_();
   applyMarch31FollowupClientPatch_();
   applyMarch31FinalBottomNavPolishPatch_();
+  applyMarch31DuplicateOrderConfirmAndBottomNavFinalPatch_();
 
 
 function buildMarch31DepositBottomMarkup_() {
@@ -8612,6 +8613,242 @@ function applyMarch31FinalBottomNavPolishPatch_() {
 
   pruneUnavailableCartFromVisibleProducts_();
 }
+
+function normalizeDuplicateOrderText_(value) {
+  return String(value == null ? '' : value).replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function buildDuplicateOrderItemKey_(item) {
+  if (!item) return '';
+  const name = normalizeDuplicateOrderText_(item.name || item.productName || '');
+  const color = normalizeDuplicateOrderText_(cleanColorLabel(item.colorValue || item.color || item.colorLabel || ''));
+  const size = normalizeDuplicateOrderText_(item.sizeValue || item.size || '');
+  const qty = String(clampQty(item.qty));
+  return [name, color, size, qty].join('||');
+}
+
+function getTodayCompletedDuplicateOrderKeySet_(customer = state.customer) {
+  pruneLocalOrders();
+  const customerKey = getCustomerOrderKey(customer);
+  if (!customerKey) return new Set();
+  const todayKey = getBroadcastDateKey();
+  const keySet = new Set();
+
+  (state.localOrders || []).forEach((order) => {
+    if (!order) return;
+    const orderDateKey = String(order.broadcastDate || (typeof getOrderDisplayDateKey === 'function' ? getOrderDisplayDateKey(order) : '') || '').trim();
+    if (orderDateKey !== todayKey) return;
+    if (getCustomerOrderKey(order.customer) !== customerKey) return;
+
+    (Array.isArray(order.items) ? order.items : []).forEach((item) => {
+      if (!item) return;
+      if (typeof isOrderItemCanceled === 'function' && isOrderItemCanceled(item)) return;
+      const key = buildDuplicateOrderItemKey_(item);
+      if (key) keySet.add(key);
+    });
+  });
+
+  return keySet;
+}
+
+function hasTodayDuplicateCompletedOrderForItems_(items, customer = state.customer) {
+  const normalizedItems = (items || []).map(normalizeCartItem).filter(Boolean);
+  if (!normalizedItems.length) return false;
+  const keySet = getTodayCompletedDuplicateOrderKeySet_(customer);
+  if (!keySet.size) return false;
+  return normalizedItems.some((item) => keySet.has(buildDuplicateOrderItemKey_(item)));
+}
+
+async function confirmDuplicateCompletedOrderIfNeeded_(items) {
+  const normalizedItems = (items || []).map(normalizeCartItem).filter(Boolean);
+  if (!normalizedItems.length) return true;
+  if (!hasTodayDuplicateCompletedOrderForItems_(normalizedItems, state.customer)) return true;
+  const ok = await showConfirmDialog({
+    title: '동일한 주문 내역이 있습니다.',
+    message: '이미 같은 주문 내역이 있습니다.\n계속 진행하시겠습니까?',
+    confirmText: '계속진행',
+    cancelText: '취소',
+    danger: false
+  });
+  return !!ok;
+}
+
+function buildMarch31FinalRequestedDepositBottomMarkup_() {
+  return '<span class="bottom-nav-icon-media deposit-icon-media" aria-hidden="true"><svg class="bottom-nav-icon-svg deposit" viewBox="0 0 28 28" fill="none"><rect x="3.5" y="6.5" width="21" height="15" rx="3" stroke="currentColor" stroke-width="1.9"></rect><path d="M7.2 9.4h2.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path><path d="M7.2 18.6h2.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path><circle cx="16.2" cy="14" r="4.2" stroke="currentColor" stroke-width="1.7"></circle><text x="16.2" y="16.45" text-anchor="middle" font-size="6.8" font-weight="900" fill="currentColor">₩</text></svg></span><span class="bottom-nav-label">입금계좌</span>';
+}
+
+function buildMarch31FinalRequestedBroadcastBottomMarkup_() {
+  return '<span class="bottom-nav-icon-media broadcast-icon-media" aria-hidden="true"><svg class="bottom-nav-icon-svg broadcast" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.95" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9.6v8.8l7.2-4.4L12 9.6Z" fill="currentColor" stroke="none"></path><path d="M6.1 10.1c-1.35 1.1-2 2.41-2 3.9s.65 2.8 2 3.9"></path><path d="M2.95 7.55C1.1 9.1.2 11.02.2 14s.9 4.9 2.75 6.45"></path><path d="M21.9 10.1c1.35 1.1 2 2.41 2 3.9s-.65 2.8-2 3.9"></path><path d="M25.05 7.55c1.85 1.55 2.75 3.47 2.75 6.45s-.9 4.9-2.75 6.45"></path></svg></span><span class="bottom-nav-label">방송보기</span>';
+}
+
+function bindDuplicateOrderConfirmGuards_() {
+  if (document.body.dataset.duplicateOrderConfirmGuardsBound === '1') return;
+  document.body.dataset.duplicateOrderConfirmGuardsBound = '1';
+
+  if (els.confirmText) {
+    els.confirmText.style.whiteSpace = 'pre-line';
+  }
+
+  if (els.detailPrimaryBtn) {
+    els.detailPrimaryBtn.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      if (state.detailContext.mode !== 'browse') {
+        await handleDetailPrimary();
+        return;
+      }
+
+      const product = getCurrentProduct();
+      if (!product || !selectionIsAvailable(product, state.detailSelection.color, state.detailSelection.size)) {
+        await handleDetailPrimary();
+        return;
+      }
+
+      const detailItem = buildDetailItemPayload();
+      if (!detailItem) {
+        await handleDetailPrimary();
+        return;
+      }
+
+      const ok = await confirmDuplicateCompletedOrderIfNeeded_([detailItem]);
+      if (!ok) return;
+      await handleDetailPrimary();
+    }, true);
+  }
+
+  if (els.cartCheckoutBtn) {
+    els.cartCheckoutBtn.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const cartItems = (state.cart || []).map(normalizeCartItem).filter(Boolean);
+      if (!cartItems.length) {
+        openCheckout('cart');
+        return;
+      }
+
+      const ok = await confirmDuplicateCompletedOrderIfNeeded_(cartItems);
+      if (!ok) return;
+      openCheckout('cart');
+    }, true);
+  }
+}
+
+function applyMarch31DuplicateOrderConfirmAndBottomNavFinalPatch_() {
+  if (document.body.dataset.march31DuplicateOrderConfirmAndBottomNavFinalPatchApplied === '1') return;
+  document.body.dataset.march31DuplicateOrderConfirmAndBottomNavFinalPatchApplied = '1';
+
+  if (!document.getElementById('march31DuplicateOrderConfirmAndBottomNavFinalStyle')) {
+    const style = document.createElement('style');
+    style.id = 'march31DuplicateOrderConfirmAndBottomNavFinalStyle';
+    style.textContent = `
+      .confirm-text{
+        white-space:pre-line!important;
+      }
+      .bottom-nav-inner{
+        grid-template-columns:repeat(4,minmax(0,1fr))!important;
+        gap:4px!important;
+        align-items:stretch!important;
+      }
+      .bottom-nav-btn{
+        min-height:64px!important;
+        gap:6px!important;
+        padding:0 2px!important;
+        display:flex!important;
+        flex-direction:column!important;
+        align-items:center!important;
+        justify-content:center!important;
+      }
+      .bottom-nav-btn > .bottom-nav-label,
+      .bottom-nav-btn > span:last-child{
+        display:block!important;
+        width:100%!important;
+        text-align:center!important;
+        font-size:11.5px!important;
+        line-height:1.12!important;
+        letter-spacing:-.03em!important;
+        white-space:nowrap!important;
+      }
+      .bottom-nav-btn > svg,
+      .bottom-nav-btn .bottom-nav-icon-media{
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        flex:0 0 auto!important;
+      }
+      #openOrdersBtn svg,
+      #openProfileBtn svg{
+        width:26px!important;
+        height:26px!important;
+      }
+      #openDepositBtn .bottom-nav-icon-media{
+        width:27px!important;
+        height:27px!important;
+        flex-basis:27px!important;
+      }
+      #openDepositBtn .bottom-nav-icon-svg.deposit{
+        width:27px!important;
+        height:27px!important;
+        display:block!important;
+      }
+      #openBroadcastBottomBtn .bottom-nav-icon-media{
+        width:31px!important;
+        height:31px!important;
+        flex-basis:31px!important;
+      }
+      #openBroadcastBottomBtn .bottom-nav-icon-svg.broadcast{
+        width:31px!important;
+        height:31px!important;
+        display:block!important;
+      }
+      @media (max-width:520px){
+        .bottom-nav-btn{
+          min-height:62px!important;
+        }
+        #openOrdersBtn svg,
+        #openProfileBtn svg{
+          width:25px!important;
+          height:25px!important;
+        }
+        #openDepositBtn .bottom-nav-icon-media,
+        #openDepositBtn .bottom-nav-icon-svg.deposit{
+          width:26px!important;
+          height:26px!important;
+          flex-basis:26px!important;
+        }
+        #openBroadcastBottomBtn .bottom-nav-icon-media,
+        #openBroadcastBottomBtn .bottom-nav-icon-svg.broadcast{
+          width:30px!important;
+          height:30px!important;
+          flex-basis:30px!important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  if (els.openDepositBtn) {
+    els.openDepositBtn.innerHTML = buildMarch31FinalRequestedDepositBottomMarkup_();
+  }
+  if (els.openBroadcastBottomBtn) {
+    els.openBroadcastBottomBtn.innerHTML = buildMarch31FinalRequestedBroadcastBottomMarkup_();
+  }
+
+  [els.openOrdersBtn, els.openDepositBtn, els.openBroadcastBottomBtn, els.openProfileBtn].forEach((btn) => {
+    if (!btn) return;
+    const label = btn.querySelector('.bottom-nav-label') || btn.querySelector('span:last-of-type');
+    if (label && !label.classList.contains('bottom-nav-label')) {
+      label.classList.add('bottom-nav-label');
+    }
+  });
+
+  bindDuplicateOrderConfirmGuards_();
+  renderCart();
+  renderCheckout();
+  renderOrders();
+}
+
 })();
 
 </script>
