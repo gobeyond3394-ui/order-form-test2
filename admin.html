@@ -514,7 +514,7 @@
 <script>
 (() => {
   const CONFIG = {
-    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbwtvhQmvM4_ED0OYa1OBAix_3zB-S40fPAqXx9AEUdVR5x6AmXMjWRyGq1Nh5CKF5_Z2g/exec',
+    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbx4Fb3LpkdWcSQ4ztwPOC5QrqA3bVH__VWfHVmgpu1-0MqNT1H4tugYvBgi936uzRbikA/exec',
     shopUrl: './index.html',
     cacheKey: 'ssu_admin_products_cache_v6',
     versionKey: 'productCatalogVersion',
@@ -2195,6 +2195,9 @@ function applyLatestAdminUserPatch_() {
       style.textContent = `
         .product-body{
           gap:4px!important;
+        }
+        .product-name{
+          min-height:auto!important;
         }
         .product-price{
           margin-top:0!important;
