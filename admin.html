@@ -2447,7 +2447,247 @@ function applyMarch31AdminFollowupPatch_() {
   init();
   applyLatestAdminUserPatch_();
   applyMarch31AdminFollowupPatch_();
+  applyMarch31AdminVisibilityTogglePatch_();
+
+
+function applyMarch31AdminVisibilityTogglePatch_() {
+  if (document.body.dataset.march31AdminVisibilityTogglePatchApplied === '1') return;
+  document.body.dataset.march31AdminVisibilityTogglePatchApplied = '1';
+
+  if (!document.getElementById('march31AdminVisibilityToggleStyle')) {
+    const style = document.createElement('style');
+    style.id = 'march31AdminVisibilityToggleStyle';
+    style.textContent = `
+      .product-card.is-hidden-from-shop{
+        opacity:.82!important;
+      }
+      .product-visibility-row{
+        margin-top:8px!important;
+        display:flex!important;
+        justify-content:flex-end!important;
+        align-items:center!important;
+        gap:10px!important;
+      }
+      .product-visibility-chip{
+        font-size:11px!important;
+        line-height:1!important;
+        font-weight:900!important;
+        color:#667085!important;
+      }
+      .product-visibility-switch{
+        position:relative!important;
+        min-width:74px!important;
+        height:34px!important;
+        padding:0 12px!important;
+        border-radius:999px!important;
+        border:1px solid #d5dbe5!important;
+        background:#f8fafc!important;
+        display:inline-flex!important;
+        align-items:center!important;
+        justify-content:flex-end!important;
+        font-size:12px!important;
+        font-weight:950!important;
+        color:#475467!important;
+        transition:all .18s ease!important;
+      }
+      .product-visibility-switch.is-on{
+        background:#111827!important;
+        border-color:#111827!important;
+        color:#fff!important;
+      }
+      .product-visibility-switch.is-off{
+        background:#f8fafc!important;
+        color:#667085!important;
+      }
+      .product-visibility-knob{
+        position:absolute!important;
+        left:7px!important;
+        top:50%!important;
+        width:20px!important;
+        height:20px!important;
+        border-radius:999px!important;
+        background:#fff!important;
+        box-shadow:0 2px 6px rgba(15,23,42,.16)!important;
+        transform:translate(0,-50%)!important;
+        transition:transform .18s ease!important;
+      }
+      .product-visibility-switch.is-on .product-visibility-knob{
+        transform:translate(38px,-50%)!important;
+      }
+      .product-visibility-text{
+        position:relative!important;
+        z-index:1!important;
+        letter-spacing:-.02em!important;
+      }
+      .product-visibility-helper{
+        margin-top:6px!important;
+        font-size:11.5px!important;
+        line-height:1.45!important;
+        font-weight:800!important;
+        color:#667085!important;
+        text-align:right!important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const baseNormalizeProductVisibility = normalizeProduct;
+  normalizeProduct = function(raw) {
+    const product = baseNormalizeProductVisibility(raw);
+    const useYn = String((raw && (raw.useYn || raw.useYN || raw.use_yn)) || '').trim().toUpperCase();
+    product.isVisible = !(raw && raw.isVisible === false) && useYn !== 'N';
+    return product;
+  };
+
+  loadProducts = async function(force) {
+    if (!apiReady()) {
+      els.productList.innerHTML = '<div class="empty-state">GAS 웹앱 URL을 먼저 입력해주세요.</div>';
+      return;
+    }
+    try {
+      let nextVersion = state.productVersion || '';
+      if (!force) {
+        nextVersion = await fetchProductVersion();
+      }
+      const shouldReload = force || !state.products.length || !state.productVersion || (nextVersion && nextVersion !== state.productVersion);
+      if (!shouldReload) return;
+      const data = await jsonpRequest(API + '?type=adminProducts&_ts=' + Date.now());
+      const rows = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : []);
+      state.products = sortProducts(rows.map(normalizeProduct));
+      state.productVersion = nextVersion || String(Date.now());
+      saveCache(rows, state.productVersion);
+      renderProductList();
+    } catch (error) {
+      console.error(error);
+      if (!state.products.length) {
+        els.productList.innerHTML = '<div class="empty-state">상품 목록을 불러오지 못했습니다.</div>';
+      }
+    }
+  };
+
+  renderProductList = function() {
+    renderStats();
+    renderListFilterRow();
+    const items = getFilteredProducts();
+    if (!items.length) {
+      els.productList.innerHTML = '<div class="empty-state">표시할 상품이 없습니다.</div>';
+      return;
+    }
+    els.productList.innerHTML = items.map((product) => {
+      const meta = summarizeColorSizeText_(product);
+      const isVisible = product.isVisible !== false;
+      return `
+        <article class="product-card ${isVisible ? '' : 'is-hidden-from-shop'}">
+          <div class="product-thumb">
+            <div class="photo-badges">${buildBadgeHtml({ flashSale: product.flashSale, soldOutSoon: product.isSoldOutSoon, soldOut: product.isSoldOut })}</div>
+            <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy">
+          </div>
+          <div class="product-body">
+            <div class="product-name">${escapeHtml(product.name)}</div>
+            <div class="product-price">${formatMoney(product.price)}</div>
+            <div class="product-meta-lines">
+              <div><strong>색상</strong> ${escapeHtml(meta.colors || '-')}</div>
+              <div><strong>사이즈</strong> ${escapeHtml(meta.sizes || '-')}</div>
+            </div>
+            <div class="product-visibility-row">
+              <span class="product-visibility-chip">고객노출</span>
+              <button class="product-visibility-switch ${isVisible ? 'is-on' : 'is-off'}" type="button" data-visibility-id="${escapeHtml(product.id)}" data-visibility-next="${isVisible ? 'off' : 'on'}" aria-pressed="${isVisible ? 'true' : 'false'}" aria-label="고객용 페이지 노출 ${isVisible ? '끄기' : '켜기'}">
+                <span class="product-visibility-knob" aria-hidden="true"></span>
+                <span class="product-visibility-text">${isVisible ? 'ON' : 'OFF'}</span>
+              </button>
+            </div>
+            <div class="product-visibility-helper">${isVisible ? '고객용 페이지에 노출 중' : '고객용 페이지에서 숨김 상태'}</div>
+            <div class="product-actions">
+              <button class="btn secondary" type="button" data-edit-id="${escapeHtml(product.id)}">수정</button>
+              <button class="btn danger" type="button" data-delete-id="${escapeHtml(product.id)}">삭제</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
+  };
+
+  async function toggleProductVisibility(productId, nextVisible, triggerButton) {
+    const product = state.products.find((item) => item.id === productId);
+    if (!product) return;
+    const button = triggerButton || null;
+    const previousLabel = button ? button.querySelector('.product-visibility-text') : null;
+    if (button) {
+      button.disabled = true;
+      if (previousLabel) previousLabel.textContent = '...';
+    }
+    try {
+      const result = await postJson({ type: 'toggleProductVisibility', id: product.id, visible: !!nextVisible });
+      if (isFailure(result)) throw new Error(failureMessage(result, '노출 상태 변경 실패'));
+      product.isVisible = !!nextVisible;
+      renderProductList();
+      notifyCatalogChanged();
+      showSuccess(product.isVisible ? '고객 노출 ON' : '고객 노출 OFF', product.isVisible ? '고객용 페이지에 바로 표시됩니다.' : '고객용 페이지에서 바로 숨겨집니다.');
+      Promise.resolve().then(() => loadProducts(true)).catch((error) => console.error(error));
+    } catch (error) {
+      console.error(error);
+      showToast(error && error.message ? error.message : '노출 상태 변경 중 오류가 발생했습니다.');
+      if (button) {
+        button.disabled = false;
+        if (previousLabel) previousLabel.textContent = product.isVisible !== false ? 'ON' : 'OFF';
+      }
+    }
+  }
+
+  if (!document.body.dataset.adminVisibilityToggleBound) {
+    document.body.dataset.adminVisibilityToggleBound = '1';
+    document.addEventListener('click', (event) => {
+      const visibilityBtn = event.target.closest('[data-visibility-id]');
+      if (!visibilityBtn) return;
+      const productId = visibilityBtn.getAttribute('data-visibility-id') || '';
+      const nextVisible = (visibilityBtn.getAttribute('data-visibility-next') || '').toLowerCase() === 'on';
+      toggleProductVisibility(productId, nextVisible, visibilityBtn);
+    });
+  }
+
+  renderProductList();
+  Promise.resolve().then(() => loadProducts(true)).catch((error) => console.error(error));
+}
+
+
+function applyMarch31AdminVisibilityStatePatch_() {
+  if (document.body.dataset.march31AdminVisibilityStatePatchApplied === '1') return;
+  document.body.dataset.march31AdminVisibilityStatePatchApplied = '1';
+
+  const baseNormalizeProductVisibleState = normalizeProduct;
+  normalizeProduct = function(raw) {
+    const product = baseNormalizeProductVisibleState(raw);
+    product.isVisible = !(raw && raw.isVisible === false);
+    return product;
+  };
+
+  const baseBuildOptionsPayloadVisibleState = buildOptionsPayload;
+  buildOptionsPayload = function() {
+    const options = baseBuildOptionsPayloadVisibleState.apply(this, arguments);
+    options.isVisible = state.form.isVisible !== false;
+    return options;
+  };
+
+  const baseEditProductVisibleState = editProduct;
+  editProduct = function(productId) {
+    baseEditProductVisibleState(productId);
+    const current = state.products.find((item) => item.id === productId);
+    state.form.isVisible = !current || current.isVisible !== false;
+  };
+
+  const baseResetFormVisibleState = resetForm;
+  resetForm = function() {
+    baseResetFormVisibleState.apply(this, arguments);
+    state.form.isVisible = true;
+  };
+
+  state.form.isVisible = state.form.isVisible !== false;
+  Promise.resolve().then(() => loadProducts(true)).catch((error) => console.error(error));
+}
+
+  applyMarch31AdminVisibilityStatePatch_();
 })();
+
 </script>
 </body>
 </html>
