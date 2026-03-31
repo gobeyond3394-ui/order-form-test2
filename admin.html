@@ -514,7 +514,7 @@
 <script>
 (() => {
   const CONFIG = {
-    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbyTcGH9RaiSoSv6Z29rt96oweVFtpxrlAfwisie7Z3t2QNWpf3e08apI2RLK7ycORDUnA/exec',
+    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbzOZxQIt1Czt7HpLzyq6Ns594aXBndmboApBSc2XDoCrnzIHJJiKxQajqQ2OCEPEGgwPQ/exec',
     shopUrl: './index.html',
     cacheKey: 'ssu_admin_products_cache_v6',
     versionKey: 'productCatalogVersion',
@@ -2086,24 +2086,24 @@ async function compressImageFile(file) {
 async function deleteProduct(productId, triggerButton) {
   const product = state.products.find((item) => item.id === productId);
   if (!product) return;
-  if (!confirm('"' + product.name + '" 상품을 삭제할까요?')) return;
+  if (!confirm('"' + product.name + '" 상품을 삭제하면 고객용 페이지에서는 바로 숨겨지고, 상품목록 시트에서는 2주 후 완전삭제됩니다. 삭제할까요?')) return;
   const button = triggerButton || null;
   const originalText = button ? button.textContent : '';
   if (button) {
     button.disabled = true;
-    button.textContent = '삭제중...';
+    button.textContent = '삭제예약중...';
   }
   try {
     const result = await postJson({ type: 'deleteProduct', id: product.id });
-    if (isFailure(result)) throw new Error(failureMessage(result, '삭제 실패'));
+    if (isFailure(result)) throw new Error(failureMessage(result, '삭제 예약 실패'));
     if (state.editingId === product.id) resetForm();
     removeLocalProduct(product.id);
     notifyCatalogChanged();
-    showSuccess('상품 삭제 완료', '목록에서 바로 제거되었습니다.', 'danger');
+    showSuccess('상품 삭제 예약 완료', '고객용 페이지에서는 바로 숨겨지고, 상품목록 시트에서는 2주 후 완전삭제됩니다.', 'danger');
     Promise.resolve().then(() => loadProducts(true)).catch((error) => console.error(error));
   } catch (error) {
     console.error(error);
-    showToast(error && error.message ? error.message : '상품 삭제 중 오류가 발생했습니다.');
+    showToast(error && error.message ? error.message : '상품 삭제 예약 중 오류가 발생했습니다.');
     if (button) {
       button.disabled = false;
       button.textContent = originalText;
@@ -2610,27 +2610,29 @@ function applyMarch31AdminVisibilityTogglePatch_() {
   async function toggleProductVisibility(productId, nextVisible, triggerButton) {
     const product = state.products.find((item) => item.id === productId);
     if (!product) return;
-    const button = triggerButton || null;
-    const previousLabel = button ? button.querySelector('.product-visibility-text') : null;
-    if (button) {
-      button.disabled = true;
-      if (previousLabel) previousLabel.textContent = '...';
-    }
+
+    state.pendingVisibility = state.pendingVisibility || {};
+    if (state.pendingVisibility[product.id]) return;
+
+    const previousVisible = product.isVisible !== false;
+    state.pendingVisibility[product.id] = true;
+    product.isVisible = !!nextVisible;
+    renderProductList();
+
     try {
       const result = await postJson({ type: 'toggleProductVisibility', id: product.id, visible: !!nextVisible });
       if (isFailure(result)) throw new Error(failureMessage(result, '노출 상태 변경 실패'));
-      product.isVisible = !!nextVisible;
+      delete state.pendingVisibility[product.id];
       renderProductList();
       notifyCatalogChanged();
-      showSuccess(product.isVisible ? '고객 노출 ON' : '고객 노출 OFF', product.isVisible ? '고객용 페이지에 바로 표시됩니다.' : '고객용 페이지에서 바로 숨겨집니다.');
+      showSuccess(product.isVisible ? '고객 노출 ON' : '고객 노출 OFF', product.isVisible ? '고객용 페이지 노출이 반영되었습니다.' : '고객용 페이지 숨김이 반영되었습니다.');
       Promise.resolve().then(() => loadProducts(true)).catch((error) => console.error(error));
     } catch (error) {
       console.error(error);
+      delete state.pendingVisibility[product.id];
+      product.isVisible = previousVisible;
+      renderProductList();
       showToast(error && error.message ? error.message : '노출 상태 변경 중 오류가 발생했습니다.');
-      if (button) {
-        button.disabled = false;
-        if (previousLabel) previousLabel.textContent = product.isVisible !== false ? 'ON' : 'OFF';
-      }
     }
   }
 
@@ -2696,12 +2698,23 @@ function applyApril01AdminRequestedFinalPatch_() {
     const style = document.createElement('style');
     style.id = 'april01AdminRequestedFinalPatchStyle';
     style.textContent = `
+      .product-card{
+        display:flex!important;
+        flex-direction:column!important;
+        align-self:start!important;
+        height:100%!important;
+      }
       .product-card.is-hidden-from-shop{
         opacity:.82!important;
       }
+      .product-thumb{
+        flex:0 0 auto!important;
+      }
       .product-body{
+        flex:1 1 auto!important;
         display:grid!important;
-        gap:8px!important;
+        gap:6px!important;
+        align-content:start!important;
       }
       .product-head-row{
         display:flex!important;
@@ -2712,8 +2725,19 @@ function applyApril01AdminRequestedFinalPatch_() {
       .product-head-row .product-name{
         min-width:0!important;
         flex:1 1 auto!important;
-        min-height:42px!important;
+        min-height:calc(1.36em * 2)!important;
         margin:0!important;
+        font-size:16px!important;
+        line-height:1.36!important;
+      }
+      .product-price{
+        margin-top:0!important;
+        font-size:24px!important;
+        line-height:1.04!important;
+      }
+      .product-meta-lines{
+        margin-top:0!important;
+        gap:3px!important;
       }
       .product-visibility-row,
       .product-visibility-helper,
@@ -2743,7 +2767,8 @@ function applyApril01AdminRequestedFinalPatch_() {
       .product-visibility-switch.is-off{
         background:#d1d5db!important;
       }
-      .product-visibility-switch:disabled{
+      .product-visibility-switch:disabled,
+      .product-visibility-switch.is-busy{
         opacity:.7!important;
       }
       .product-visibility-knob{
@@ -2762,7 +2787,7 @@ function applyApril01AdminRequestedFinalPatch_() {
         transform:translateX(20px)!important;
       }
       .product-actions{
-        margin-top:0!important;
+        margin-top:6px!important;
       }
     `;
     document.head.appendChild(style);
@@ -2779,6 +2804,7 @@ function applyApril01AdminRequestedFinalPatch_() {
     els.productList.innerHTML = items.map((product) => {
       const meta = summarizeColorSizeText_(product);
       const isVisible = product.isVisible !== false;
+      const isVisibilityPending = !!(state.pendingVisibility && state.pendingVisibility[product.id]);
       return `
         <article class="product-card ${isVisible ? '' : 'is-hidden-from-shop'}">
           <div class="product-thumb">
@@ -2788,7 +2814,7 @@ function applyApril01AdminRequestedFinalPatch_() {
           <div class="product-body">
             <div class="product-head-row">
               <div class="product-name">${escapeHtml(product.name)}</div>
-              <button class="product-visibility-switch ${isVisible ? 'is-on' : 'is-off'}" type="button" data-visibility-id="${escapeHtml(product.id)}" data-visibility-next="${isVisible ? 'off' : 'on'}" aria-pressed="${isVisible ? 'true' : 'false'}" aria-label="고객용 페이지 노출 ${isVisible ? '끄기' : '켜기'}">
+              <button class="product-visibility-switch ${isVisible ? 'is-on' : 'is-off'}${isVisibilityPending ? ' is-busy' : ''}" type="button" data-visibility-id="${escapeHtml(product.id)}" data-visibility-next="${isVisible ? 'off' : 'on'}" aria-pressed="${isVisible ? 'true' : 'false'}" aria-label="고객용 페이지 노출 ${isVisible ? '끄기' : '켜기'}" ${isVisibilityPending ? 'disabled aria-disabled="true"' : ''}>
                 <span class="product-visibility-knob" aria-hidden="true"></span>
               </button>
             </div>
