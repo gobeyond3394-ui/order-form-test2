@@ -2349,8 +2349,106 @@ function applyLatestAdminUserPatch_() {
 }
 
 
+
+function applyMarch31AdminFinalFixes_() {
+  if (document.body.dataset.march31AdminFinalFixesApplied === '1') return;
+  document.body.dataset.march31AdminFinalFixesApplied = '1';
+
+  const uniqueCleanList_ = (list) => {
+    return (Array.isArray(list) ? list : [])
+      .map((item) => String(item || '').trim())
+      .filter((item) => item && !/^\[object object\]$/i.test(item))
+      .filter((item, index, arr) => arr.indexOf(item) === index);
+  };
+
+  const getExplicitCustomSizeKeys_ = (color) => {
+    return uniqueCleanList_(Array.isArray(color && color.__customSizeKeys) ? color.__customSizeKeys : []);
+  };
+
+  getColorSizeKeys_ = function(color) {
+    const preset = getPresetSizes(state.form.productType);
+    const merged = uniqueCleanList_(preset.concat(getExplicitCustomSizeKeys_(color)));
+    if (!merged.length) merged.push('FREE');
+    return merged;
+  };
+
+  ensureColorStates = function() {
+    state.form.colors.forEach((color) => {
+      color.sizeStates = color.sizeStates || {};
+      color.__customSizeKeys = getExplicitCustomSizeKeys_(color);
+      const keys = getColorSizeKeys_(color);
+      const nextStates = {};
+      keys.forEach((sizeKey) => {
+        const current = color.sizeStates[sizeKey] || {};
+        nextStates[sizeKey] = {
+          enabled: !!current.enabled,
+          soldOut: !!current.soldOut
+        };
+      });
+      color.sizeStates = nextStates;
+    });
+  };
+
+  const rebuildColorStatesForType_ = (nextType) => {
+    state.form.colors.forEach((color) => {
+      const current = color.sizeStates || {};
+      const explicitCustom = getExplicitCustomSizeKeys_(color);
+      color.__customSizeKeys = explicitCustom.slice();
+      const keys = uniqueCleanList_(getPresetSizes(nextType).concat(explicitCustom));
+      const nextStates = {};
+      keys.forEach((sizeKey) => {
+        const currentState = current[sizeKey] || {};
+        nextStates[sizeKey] = {
+          enabled: !!currentState.enabled,
+          soldOut: !!currentState.soldOut
+        };
+      });
+      color.sizeStates = nextStates;
+    });
+  };
+
+  const baseEditProductMarch31_ = editProduct;
+  editProduct = function(productId) {
+    baseEditProductMarch31_(productId);
+    state.form.colors.forEach((color) => {
+      color.__customSizeKeys = getExplicitCustomSizeKeys_(color);
+    });
+    if (els.typeInput) els.typeInput.dataset.prevType = state.form.productType || els.typeInput.value || '의류';
+    renderForm();
+  };
+
+  const baseResetFormMarch31_ = resetForm;
+  resetForm = function() {
+    baseResetFormMarch31_();
+    if (els.typeInput) els.typeInput.dataset.prevType = state.form.productType || els.typeInput.value || '의류';
+  };
+
+  if (els.typeInput && !document.body.dataset.march31TypeInputRebound) {
+    document.body.dataset.march31TypeInputRebound = '1';
+    const nextTypeInput = els.typeInput.cloneNode(true);
+    els.typeInput.parentNode.replaceChild(nextTypeInput, els.typeInput);
+    els.typeInput = nextTypeInput;
+    els.typeInput.value = state.form.productType || '의류';
+    els.typeInput.dataset.prevType = state.form.productType || els.typeInput.value || '의류';
+    els.typeInput.addEventListener('change', () => {
+      const nextType = els.typeInput.value || '의류';
+      state.form.productType = nextType;
+      rebuildColorStatesForType_(nextType);
+      els.typeInput.dataset.prevType = nextType;
+      renderForm();
+    });
+  }
+
+  state.form.colors.forEach((color) => {
+    color.__customSizeKeys = getExplicitCustomSizeKeys_(color);
+  });
+  ensureColorStates();
+  renderForm();
+}
+
   init();
   applyLatestAdminUserPatch_();
+  applyMarch31AdminFinalFixes_();
 })();
 </script>
 </body>
