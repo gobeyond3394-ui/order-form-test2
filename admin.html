@@ -514,7 +514,7 @@
 <script>
 (() => {
   const CONFIG = {
-    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbx4Fb3LpkdWcSQ4ztwPOC5QrqA3bVH__VWfHVmgpu1-0MqNT1H4tugYvBgi936uzRbikA/exec',
+    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbyTcGH9RaiSoSv6Z29rt96oweVFtpxrlAfwisie7Z3t2QNWpf3e08apI2RLK7ycORDUnA/exec',
     shopUrl: './index.html',
     cacheKey: 'ssu_admin_products_cache_v6',
     versionKey: 'productCatalogVersion',
@@ -2686,6 +2686,130 @@ function applyMarch31AdminVisibilityStatePatch_() {
 }
 
   applyMarch31AdminVisibilityStatePatch_();
+  applyApril01AdminRequestedFinalPatch_();
+
+function applyApril01AdminRequestedFinalPatch_() {
+  if (document.body.dataset.april01AdminRequestedFinalPatchApplied === '1') return;
+  document.body.dataset.april01AdminRequestedFinalPatchApplied = '1';
+
+  if (!document.getElementById('april01AdminRequestedFinalPatchStyle')) {
+    const style = document.createElement('style');
+    style.id = 'april01AdminRequestedFinalPatchStyle';
+    style.textContent = `
+      .product-card.is-hidden-from-shop{
+        opacity:.82!important;
+      }
+      .product-body{
+        display:grid!important;
+        gap:8px!important;
+      }
+      .product-head-row{
+        display:flex!important;
+        align-items:flex-start!important;
+        justify-content:space-between!important;
+        gap:10px!important;
+      }
+      .product-head-row .product-name{
+        min-width:0!important;
+        flex:1 1 auto!important;
+        min-height:42px!important;
+        margin:0!important;
+      }
+      .product-visibility-row,
+      .product-visibility-helper,
+      .product-visibility-chip,
+      .product-visibility-text{
+        display:none!important;
+      }
+      .product-visibility-switch{
+        position:relative!important;
+        flex:0 0 auto!important;
+        width:48px!important;
+        min-width:48px!important;
+        height:28px!important;
+        min-height:28px!important;
+        padding:0!important;
+        border:0!important;
+        border-radius:999px!important;
+        background:#d1d5db!important;
+        display:inline-flex!important;
+        align-items:center!important;
+        justify-content:flex-start!important;
+        box-shadow:none!important;
+      }
+      .product-visibility-switch.is-on{
+        background:#0f172a!important;
+      }
+      .product-visibility-switch.is-off{
+        background:#d1d5db!important;
+      }
+      .product-visibility-switch:disabled{
+        opacity:.7!important;
+      }
+      .product-visibility-knob{
+        position:absolute!important;
+        left:3px!important;
+        top:3px!important;
+        width:22px!important;
+        height:22px!important;
+        border-radius:999px!important;
+        background:#fff!important;
+        box-shadow:0 1px 4px rgba(15,23,42,.18)!important;
+        transform:none!important;
+        transition:transform .18s ease!important;
+      }
+      .product-visibility-switch.is-on .product-visibility-knob{
+        transform:translateX(20px)!important;
+      }
+      .product-actions{
+        margin-top:0!important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  renderProductList = function() {
+    renderStats();
+    renderListFilterRow();
+    const items = getFilteredProducts();
+    if (!items.length) {
+      els.productList.innerHTML = '<div class="empty-state">표시할 상품이 없습니다.</div>';
+      return;
+    }
+    els.productList.innerHTML = items.map((product) => {
+      const meta = summarizeColorSizeText_(product);
+      const isVisible = product.isVisible !== false;
+      return `
+        <article class="product-card ${isVisible ? '' : 'is-hidden-from-shop'}">
+          <div class="product-thumb">
+            <div class="photo-badges">${buildBadgeHtml({ flashSale: product.flashSale, soldOutSoon: product.isSoldOutSoon, soldOut: product.isSoldOut })}</div>
+            <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy">
+          </div>
+          <div class="product-body">
+            <div class="product-head-row">
+              <div class="product-name">${escapeHtml(product.name)}</div>
+              <button class="product-visibility-switch ${isVisible ? 'is-on' : 'is-off'}" type="button" data-visibility-id="${escapeHtml(product.id)}" data-visibility-next="${isVisible ? 'off' : 'on'}" aria-pressed="${isVisible ? 'true' : 'false'}" aria-label="고객용 페이지 노출 ${isVisible ? '끄기' : '켜기'}">
+                <span class="product-visibility-knob" aria-hidden="true"></span>
+              </button>
+            </div>
+            <div class="product-price">${formatMoney(product.price)}</div>
+            <div class="product-meta-lines">
+              <div><strong>색상</strong> ${escapeHtml(meta.colors || '-')}</div>
+              <div><strong>사이즈</strong> ${escapeHtml(meta.sizes || '-')}</div>
+            </div>
+            <div class="product-actions">
+              <button class="btn secondary" type="button" data-edit-id="${escapeHtml(product.id)}">수정</button>
+              <button class="btn danger" type="button" data-delete-id="${escapeHtml(product.id)}">삭제</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join('');
+  };
+
+  renderProductList();
+}
+
 })();
 
 </script>
