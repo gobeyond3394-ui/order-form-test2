@@ -514,7 +514,7 @@
 <script>
 (() => {
   const CONFIG = {
-    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbzOZxQIt1Czt7HpLzyq6Ns594aXBndmboApBSc2XDoCrnzIHJJiKxQajqQ2OCEPEGgwPQ/exec',
+    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbwbkwklxXg2m_fziAQbM_qBzNRfU8vvAbyhCK1LkjdKSBTteHbTcYMB0FWlfEfF_gexHw/exec',
     shopUrl: './index.html',
     cacheKey: 'ssu_admin_products_cache_v6',
     versionKey: 'productCatalogVersion',
@@ -2835,6 +2835,39 @@ function applyApril01AdminRequestedFinalPatch_() {
 
   renderProductList();
 }
+
+function applyApril01AdminStabilityPatch_() {
+  if (document.body.dataset.april01AdminStabilityPatchApplied === '1') return;
+  document.body.dataset.april01AdminStabilityPatchApplied = '1';
+
+  if (!document.getElementById('april01AdminStabilityPatchStyle')) {
+    const style = document.createElement('style');
+    style.id = 'april01AdminStabilityPatchStyle';
+    style.textContent = `
+      .product-grid{
+        align-items:start!important;
+      }
+      .product-card{
+        display:grid!important;
+        grid-template-rows:auto minmax(0,1fr)!important;
+        align-self:start!important;
+      }
+      .product-thumb{
+        align-self:start!important;
+      }
+      .product-body{
+        display:grid!important;
+        align-content:start!important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  renderProductList();
+}
+
+applyApril01AdminStabilityPatch_();
+
 
 })();
 
