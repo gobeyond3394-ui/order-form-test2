@@ -9387,5 +9387,358 @@ applyApril01CustomerMicroLayoutFix_();
 })();
 
 </script>
+
+<style id="gpt-final-user-fixes-20260401">
+  :root{
+    --gpt-final-nav-gap:12px;
+    --gpt-final-nav-icon:29px;
+    --gpt-final-nav-label:11.6px;
+    --gpt-final-product-name-lines:2;
+    --gpt-final-product-name-lh:1.34;
+    --gpt-final-product-price-h:1.1em;
+    --gpt-final-product-ship-h:18px;
+  }
+
+  .product-grid{
+    align-items:start!important;
+  }
+  .product-card{
+    -webkit-appearance:none!important;
+    appearance:none!important;
+    display:grid!important;
+    grid-template-rows:auto auto!important;
+    align-self:start!important;
+    justify-self:stretch!important;
+    width:100%!important;
+    height:auto!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  .product-media{
+    width:100%!important;
+    align-self:start!important;
+  }
+  .product-body{
+    display:grid!important;
+    grid-template-rows:calc(var(--gpt-final-product-name-lines) * var(--gpt-final-product-name-lh) * 1em) var(--gpt-final-product-price-h) var(--gpt-final-product-ship-h)!important;
+    align-content:start!important;
+    row-gap:8px!important;
+    column-gap:0!important;
+    min-width:0!important;
+    padding:12px 4px 0!important;
+  }
+  .product-name,
+  .product-price,
+  .product-ship{
+    justify-self:stretch!important;
+    text-align:left!important;
+    min-width:0!important;
+  }
+  .product-name{
+    height:calc(var(--gpt-final-product-name-lines) * var(--gpt-final-product-name-lh) * 1em)!important;
+    min-height:calc(var(--gpt-final-product-name-lines) * var(--gpt-final-product-name-lh) * 1em)!important;
+    max-height:calc(var(--gpt-final-product-name-lines) * var(--gpt-final-product-name-lh) * 1em)!important;
+    margin:0!important;
+    line-height:var(--gpt-final-product-name-lh)!important;
+    display:-webkit-box!important;
+    -webkit-line-clamp:2!important;
+    -webkit-box-orient:vertical!important;
+    overflow:hidden!important;
+  }
+  .product-price{
+    height:var(--gpt-final-product-price-h)!important;
+    min-height:var(--gpt-final-product-price-h)!important;
+    max-height:var(--gpt-final-product-price-h)!important;
+    margin:0!important;
+    display:flex!important;
+    align-items:flex-start!important;
+    justify-content:flex-start!important;
+    line-height:1.04!important;
+  }
+  .product-ship{
+    height:var(--gpt-final-product-ship-h)!important;
+    min-height:var(--gpt-final-product-ship-h)!important;
+    max-height:var(--gpt-final-product-ship-h)!important;
+    margin:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    gap:6px!important;
+    line-height:1.35!important;
+  }
+  .product-ship svg{
+    width:16px!important;
+    height:16px!important;
+    flex:0 0 16px!important;
+    margin:0!important;
+  }
+  .product-ship span{
+    display:block!important;
+    margin:0!important;
+    line-height:1.35!important;
+  }
+
+  .bottom-nav{
+    padding:6px 0 calc(6px + var(--safe-bottom))!important;
+  }
+  .bottom-nav-inner{
+    width:min(100%,720px)!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    align-items:stretch!important;
+    justify-items:stretch!important;
+    column-gap:var(--gpt-final-nav-gap)!important;
+    row-gap:0!important;
+    padding-inline:var(--gpt-final-nav-gap)!important;
+  }
+  .bottom-nav-btn{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:none!important;
+    min-height:68px!important;
+    margin:0!important;
+    padding:0!important;
+    display:grid!important;
+    grid-template-rows:var(--gpt-final-nav-icon) auto!important;
+    align-content:center!important;
+    justify-items:center!important;
+    row-gap:8px!important;
+  }
+  .bottom-nav-btn > .bottom-nav-icon-media,
+  .bottom-nav-btn > svg{
+    width:var(--gpt-final-nav-icon)!important;
+    height:var(--gpt-final-nav-icon)!important;
+    flex:0 0 var(--gpt-final-nav-icon)!important;
+    margin:0 auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    line-height:0!important;
+  }
+  .bottom-nav-btn .bottom-nav-icon-svg{
+    display:block!important;
+    width:var(--gpt-final-nav-icon)!important;
+    height:var(--gpt-final-nav-icon)!important;
+  }
+  .bottom-nav-btn > .bottom-nav-label,
+  .bottom-nav-btn > span:last-child{
+    display:flex!important;
+    align-items:flex-start!important;
+    justify-content:center!important;
+    width:100%!important;
+    min-height:16px!important;
+    margin:0!important;
+    text-align:center!important;
+    white-space:nowrap!important;
+    line-height:1!important;
+    font-size:var(--gpt-final-nav-label)!important;
+    letter-spacing:-.03em!important;
+  }
+
+  .hero .social-row,
+  .hero .social-icon-btn{
+    visibility:visible!important;
+    opacity:1!important;
+  }
+  .hero .social-row{
+    display:flex!important;
+  }
+  .hero .social-icon-btn{
+    display:inline-flex!important;
+    will-change:auto!important;
+    transform:none!important;
+    isolation:isolate;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+  }
+  .hero .social-icon-btn svg{
+    display:none!important;
+  }
+  .hero .social-icon-btn.is-pressed{
+    transform:none!important;
+    filter:none!important;
+  }
+  .hero .social-icon-btn .stable-social-icon{
+    display:block!important;
+    max-width:100%!important;
+    width:auto;
+    height:auto;
+    pointer-events:none;
+    user-select:none;
+    -webkit-user-drag:none;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    transform:translateZ(0);
+  }
+  .hero .social-icon-btn.youtube .stable-social-icon{
+    width:38px!important;
+    height:28px!important;
+  }
+  .hero .social-icon-btn.tiktok .stable-social-icon{
+    width:25px!important;
+    height:30px!important;
+  }
+
+  @media (max-width:520px){
+    :root{
+      --gpt-final-nav-gap:10px;
+      --gpt-final-nav-icon:27px;
+      --gpt-final-nav-label:11px;
+    }
+    .product-body{
+      padding:12px 3px 0!important;
+    }
+    .hero .social-icon-btn.youtube .stable-social-icon{
+      width:34px!important;
+      height:25px!important;
+    }
+    .hero .social-icon-btn.tiktok .stable-social-icon{
+      width:23px!important;
+      height:28px!important;
+    }
+  }
+  @media (max-width:390px){
+    :root{
+      --gpt-final-nav-gap:8px;
+      --gpt-final-nav-icon:26px;
+      --gpt-final-nav-label:10.6px;
+    }
+  }
+</style>
+
+
+<script id="gpt-final-user-fixes-20260401-script">
+(function(){
+  const doc = document;
+  const win = window;
+
+  function openFallbackSheet(id){
+    doc.querySelectorAll('.sheet.show').forEach((el) => el.classList.remove('show'));
+    const backdrop = doc.getElementById('sheetBackdrop');
+    const target = doc.getElementById(id);
+    if (target) target.classList.add('show');
+    if (backdrop) backdrop.classList.add('show');
+    doc.body.classList.add('sheet-open');
+  }
+
+  function buildDepositMarkup(){
+    return '<span class="bottom-nav-icon-media deposit-icon-media" aria-hidden="true"><svg class="bottom-nav-icon-svg deposit" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7.2" width="20" height="13.6" rx="2.9"></rect><path d="M7.7 12.1h7.2"></path><path d="M7.7 16h4.7"></path><path d="M18.2 14h4.5"></path></svg></span><span class="bottom-nav-label">입금계좌</span>';
+  }
+
+  function ensureBottomNav(){
+    const inner = doc.querySelector('.bottom-nav .bottom-nav-inner');
+    if (!inner) return;
+
+    let deposit = doc.getElementById('openDepositBtn');
+    if (!deposit) {
+      deposit = doc.createElement('button');
+      deposit.type = 'button';
+      deposit.className = 'bottom-nav-btn';
+      deposit.id = 'openDepositBtn';
+      deposit.setAttribute('aria-label', '입금계좌');
+      deposit.innerHTML = buildDepositMarkup();
+      const broadcast = doc.getElementById('openBroadcastBottomBtn');
+      if (broadcast && broadcast.parentNode === inner) {
+        inner.insertBefore(deposit, broadcast);
+      } else {
+        inner.appendChild(deposit);
+      }
+      deposit.addEventListener('click', function(){
+        openFallbackSheet('depositSheet');
+      });
+    }
+
+    ['openOrdersBtn','openDepositBtn','openBroadcastBottomBtn','openProfileBtn']
+      .map((id) => doc.getElementById(id))
+      .filter(Boolean)
+      .forEach((btn) => {
+        if (btn.parentNode === inner) inner.appendChild(btn);
+        const label = btn.querySelector('.bottom-nav-label') || btn.querySelector('span:last-of-type');
+        if (label && !label.classList.contains('bottom-nav-label')) label.classList.add('bottom-nav-label');
+      });
+  }
+
+  function svgDataUri(svg){
+    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+  }
+
+  const youtubeSvg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="38" height="28" viewBox="0 0 38 28" fill="none">
+      <rect width="38" height="28" rx="10" fill="#FF0033"/>
+      <path d="M15.2 8.9 25.6 14 15.2 19.1V8.9Z" fill="#FFF"/>
+    </svg>`;
+
+  const tiktokSvg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="25" height="30" viewBox="0 0 25 30" fill="none">
+      <path d="M12.2 3.4v16.8a4.4 4.4 0 1 1-3.1-4.2v-4a8.6 8.6 0 1 0 7.1 8.5v-8.2c1.7 1.2 3.6 1.8 5.7 1.8V10c-2.3-.3-4.3-1.8-5.2-3.8a8 8 0 0 1-.5-2.8h-4Z" fill="#25F4EE"/>
+      <path d="M13.7 2.2v16.8a4.4 4.4 0 1 1-3.1-4.2v-4a8.6 8.6 0 1 0 7.1 8.5v-8.2c1.7 1.2 3.6 1.8 5.7 1.8V8.8c-2.3-.3-4.3-1.8-5.2-3.8a8 8 0 0 1-.5-2.8h-4Z" fill="#FE2C55"/>
+      <path d="M12.95 2.8v16.8a4.4 4.4 0 1 1-3.1-4.2v-4a8.6 8.6 0 1 0 7.1 8.5v-8.2c1.7 1.2 3.6 1.8 5.7 1.8V9.4c-2.3-.3-4.3-1.8-5.2-3.8a8 8 0 0 1-.5-2.8h-4Z" fill="#FFF"/>
+    </svg>`;
+
+  function setStableSocialIcon(buttonId, label, svgMarkup){
+    const btn = doc.getElementById(buttonId);
+    if (!btn) return;
+    const src = svgDataUri(svgMarkup);
+    const existing = btn.querySelector('.stable-social-icon');
+    if (existing && existing.getAttribute('src') === src) return;
+    btn.innerHTML = '<img class="stable-social-icon" src="' + src + '" alt="" aria-hidden="true" draggable="false" decoding="sync" loading="eager"><span class="sr-only">' + label + '</span>';
+  }
+
+  let heroRepairRaf = 0;
+  function repairHeroSocial(){
+    heroRepairRaf = 0;
+    const row = doc.querySelector('.hero .social-row');
+    if (row) {
+      row.style.display = 'flex';
+      row.style.visibility = 'visible';
+      row.style.opacity = '1';
+    }
+    ['openYoutubeBtn', 'openTiktokBtn'].forEach((id) => {
+      const btn = doc.getElementById(id);
+      if (!btn) return;
+      btn.style.display = 'inline-flex';
+      btn.style.visibility = 'visible';
+      btn.style.opacity = '1';
+    });
+    setStableSocialIcon('openYoutubeBtn', '유튜브 방송보기', youtubeSvg);
+    setStableSocialIcon('openTiktokBtn', '틱톡 방송보기', tiktokSvg);
+  }
+
+  function scheduleHeroRepair(){
+    if (heroRepairRaf) return;
+    heroRepairRaf = win.requestAnimationFrame(repairHeroSocial);
+  }
+
+  function boot(){
+    ensureBottomNav();
+    repairHeroSocial();
+    const row = doc.querySelector('.hero .social-row');
+    if (row && !row.dataset.gptFinalFixObserver) {
+      row.dataset.gptFinalFixObserver = '1';
+      new MutationObserver(scheduleHeroRepair).observe(row, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+      });
+    }
+  }
+
+  boot();
+  [0, 180, 720].forEach((delay) => win.setTimeout(boot, delay));
+  win.addEventListener('pageshow', boot, { passive: true });
+  win.addEventListener('focus', scheduleHeroRepair, { passive: true });
+  win.addEventListener('resize', scheduleHeroRepair, { passive: true });
+  win.addEventListener('scroll', scheduleHeroRepair, { passive: true });
+  doc.addEventListener('visibilitychange', () => {
+    if (!doc.hidden) boot();
+  });
+})();
+</script>
+
 </body>
 </html>
