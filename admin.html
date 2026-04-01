@@ -514,7 +514,7 @@
 <script>
 (() => {
   const CONFIG = {
-    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbwbkwklxXg2m_fziAQbM_qBzNRfU8vvAbyhCK1LkjdKSBTteHbTcYMB0FWlfEfF_gexHw/exec',
+    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbx4US1mCXEyWr1UiCnvIgxGUOdEq06j6sTgZEoRvHOg3wePy-uDpIwo5U66WeuifPbY2Q/exec',
     shopUrl: './index.html',
     cacheKey: 'ssu_admin_products_cache_v6',
     versionKey: 'productCatalogVersion',
@@ -2867,6 +2867,72 @@ function applyApril01AdminStabilityPatch_() {
 }
 
 applyApril01AdminStabilityPatch_();
+
+function applyApril01AdminMicroLayoutFix_() {
+  if (document.body.dataset.april01AdminMicroLayoutFixApplied === '1') return;
+  document.body.dataset.april01AdminMicroLayoutFixApplied = '1';
+
+  if (!document.getElementById('april01AdminMicroLayoutFixStyle')) {
+    const style = document.createElement('style');
+    style.id = 'april01AdminMicroLayoutFixStyle';
+    style.textContent = `
+      .product-grid{
+        align-items:stretch!important;
+      }
+      .product-card{
+        display:grid!important;
+        grid-template-rows:auto minmax(0,1fr)!important;
+        align-self:stretch!important;
+        justify-self:stretch!important;
+        height:100%!important;
+        min-width:0!important;
+      }
+      .product-thumb{
+        width:100%!important;
+        align-self:start!important;
+      }
+      .product-body{
+        display:grid!important;
+        grid-template-rows:minmax(calc(1.36em * 2), auto) auto minmax(calc(1.55em * 2 + 3px), auto) auto!important;
+        gap:6px!important;
+        align-content:start!important;
+        min-width:0!important;
+      }
+      .product-head-row{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr) auto!important;
+        align-items:start!important;
+        gap:10px!important;
+        min-height:calc(1.36em * 2)!important;
+      }
+      .product-head-row .product-name{
+        min-height:calc(1.36em * 2)!important;
+        margin:0!important;
+        line-height:1.36!important;
+      }
+      .product-price{
+        margin:0!important;
+        line-height:1.04!important;
+      }
+      .product-meta-lines{
+        margin:0!important;
+        min-height:calc(1.55em * 2 + 3px)!important;
+        align-content:start!important;
+      }
+      .product-actions{
+        margin-top:0!important;
+        align-self:end!important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  if (Array.isArray(state.products) && state.products.length) {
+    renderProductList();
+  }
+}
+
+applyApril01AdminMicroLayoutFix_();
 
 
 })();
