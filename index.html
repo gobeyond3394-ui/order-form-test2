@@ -1836,6 +1836,18 @@ input,textarea,select{font-size:16px}
   }
 </style>
 
+
+<style id="kakao-channel-safearea-fix">
+  :root{
+    --safe-top: 0px !important;
+    --safe-bottom: 0px !important;
+  }
+  html.ios-safe-area{
+    --safe-top: env(safe-area-inset-top, 0px) !important;
+    --safe-bottom: env(safe-area-inset-bottom, 0px) !important;
+  }
+</style>
+
 </head>
 <body>
   <header class="topbar">
@@ -1974,7 +1986,7 @@ input,textarea,select{font-size:16px}
             </div>
             <div class="shipping-copy">
               <div id="detailShippingLine1">배송비 4,000원 · 당일 10만↑무배 · 제주 +3000원</div>
-              <div id="detailShippingLine2">금~일 주문 합배 · 3영업일 내 발송</div>
+              <div id="detailShippingLine2">3영업일 내 발송</div>
             </div>
           </div>
           <div class="selected-divider"></div>
@@ -9071,5 +9083,15 @@ applyApril01UserRequestFinalLayoutPatch_();
 })();
 
 </script>
+
+<script id="kakao-channel-safearea-fix-script">
+(function(){
+  var root = document.documentElement;
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  root.classList.toggle('ios-safe-area', isIOS);
+})();
+</script>
+
 </body>
 </html>
