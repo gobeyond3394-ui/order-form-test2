@@ -2413,7 +2413,8 @@ input,textarea,select{font-size:16px}
   }
 
   function isJejuAddress(addressText) {
-    return /제주|제주특별자치도|도서|산간|울릉|백령|연평|추자/i.test(String(addressText || ''));
+    const text = String(addressText || '');
+    return /제주|제주특별자치도|울릉|백령|연평|추자|우도|가파|마라도|옹진|신안|흑산|비금|도초|완도|진도|여수.*삼산면|여수.*남면/i.test(text);
   }
 
   function getSubtotal(items) {
@@ -2902,15 +2903,15 @@ input,textarea,select{font-size:16px}
 
   function sortProducts(items) {
     return items.slice().sort((a, b) => {
-      const orderDiff = Number(b.displayOrder || 0) - Number(a.displayOrder || 0);
-      if (orderDiff) return orderDiff;
-      if (!!a.isSoldOut !== !!b.isSoldOut) return a.isSoldOut ? 1 : -1;
-
       const aCreatedAt = parseProductTimeValue(a.createdAt);
       const bCreatedAt = parseProductTimeValue(b.createdAt);
       if (aCreatedAt && bCreatedAt && aCreatedAt !== bCreatedAt) return bCreatedAt - aCreatedAt;
       if (aCreatedAt && !bCreatedAt) return -1;
       if (!aCreatedAt && bCreatedAt) return 1;
+
+      const orderDiff = Number(b.displayOrder || 0) - Number(a.displayOrder || 0);
+      if (orderDiff) return orderDiff;
+      if (!!a.isSoldOut !== !!b.isSoldOut) return a.isSoldOut ? 1 : -1;
 
       const aUpdatedAt = parseProductTimeValue(a.updatedAt);
       const bUpdatedAt = parseProductTimeValue(b.updatedAt);
@@ -4147,7 +4148,8 @@ function getFullAddress(customer = state.customer) {
 }
 
 function isJejuAddress(addressText) {
-  return /제주|제주특별자치도|도서|산간|울릉|백령|연평|추자|우도|가파|마라도|옹진|신안|흑산|홍도|거문|금오|비금|도초|완도|진도/i.test(String(addressText || ''));
+  const text = String(addressText || '');
+  return /제주|제주특별자치도|울릉|백령|연평|추자|우도|가파|마라도|옹진|신안|흑산|비금|도초|완도|진도|여수.*삼산면|여수.*남면/i.test(text);
 }
 
 function isRemoteArea(customer = state.customer) {
