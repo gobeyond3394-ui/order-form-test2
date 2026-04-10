@@ -514,7 +514,7 @@
 <script>
 (() => {
   const CONFIG = {
-    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbxV95jV4p-7A4D-dfluxu6McGLIzKvWuhbn3OgDBfJCrSHj6eVnob60zcW7pAlNXXkI/exec',
+    gasWebAppUrl: 'https://script.google.com/macros/s/AKfycbwC0c_Efm61Opej4_2P_sb7CReQV0S-TlGD0gwqrqrPvUw0daf5Zi8_87zYXfYmL3vM/exec',
     shopUrl: './index.html',
     cacheKey: 'ssu_admin_products_cache_v6',
     versionKey: 'productCatalogVersion',
@@ -1357,7 +1357,7 @@ function renderForm() {
   async function compressImageFile(file) {
     const dataUrl = await fileToDataUrl(file);
     const img = await loadImage(dataUrl);
-    const maxSide = 1280;
+    const maxSide = 960;
     let width = img.width;
     let height = img.height;
     if (width > height && width > maxSide) {
@@ -1372,7 +1372,7 @@ function renderForm() {
     canvas.height = height;
     const ctx = canvas.getContext('2d', { alpha: false });
     ctx.drawImage(img, 0, 0, width, height);
-    return canvas.toDataURL('image/jpeg', 0.82).split(',')[1];
+    return canvas.toDataURL('image/jpeg', 0.73).split(',')[1];
   }
 
   async function handleImageFile(file) {
@@ -2065,7 +2065,7 @@ function showSuccess(title, sub, tone = 'success') {
 async function compressImageFile(file) {
   const dataUrl = await fileToDataUrl(file);
   const img = await loadImage(dataUrl);
-  const maxSide = 1080;
+  const maxSide = 960;
   let width = img.width;
   let height = img.height;
   if (width > height && width > maxSide) {
@@ -2080,7 +2080,7 @@ async function compressImageFile(file) {
   canvas.height = height;
   const ctx = canvas.getContext('2d', { alpha: false });
   ctx.drawImage(img, 0, 0, width, height);
-  return canvas.toDataURL('image/jpeg', 0.76).split(',')[1];
+  return canvas.toDataURL('image/jpeg', 0.73).split(',')[1];
 }
 
 async function deleteProduct(productId, triggerButton) {
@@ -2933,6 +2933,212 @@ function applyApril01AdminMicroLayoutFix_() {
 }
 
 applyApril01AdminMicroLayoutFix_();
+
+
+function applyApril09QueueMonitorPatch_() {
+  if (document.body.dataset.april09QueueMonitorPatchApplied === '1') return;
+  document.body.dataset.april09QueueMonitorPatchApplied = '1';
+
+  if (!document.getElementById('april09QueueMonitorPatchStyle')) {
+    const style = document.createElement('style');
+    style.id = 'april09QueueMonitorPatchStyle';
+    style.textContent = `
+      .queue-monitor-section{
+        margin-top:18px;
+      }
+      .queue-monitor-grid{
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:10px;
+      }
+      .queue-monitor-card{
+        min-height:96px;
+        padding:16px 14px;
+        border-radius:22px;
+        border:1px solid var(--line-strong);
+        background:#fff;
+        display:grid;
+        gap:6px;
+        align-content:center;
+      }
+      .queue-monitor-card strong{
+        font-size:24px;
+        line-height:1;
+        font-weight:950;
+        letter-spacing:-.04em;
+        color:#111827;
+      }
+      .queue-monitor-card span{
+        font-size:13px;
+        line-height:1.45;
+        font-weight:900;
+        color:#334155;
+      }
+      .queue-monitor-card small{
+        font-size:12px;
+        line-height:1.55;
+        font-weight:800;
+        color:#667085;
+      }
+      .queue-monitor-actions{
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+      }
+      .queue-monitor-actions .status-pill{
+        cursor:pointer;
+      }
+      .queue-monitor-actions .status-pill:disabled{
+        opacity:.55;
+        pointer-events:none;
+      }
+      .queue-monitor-foot{
+        margin-top:12px;
+        font-size:12px;
+        line-height:1.55;
+        font-weight:800;
+        color:#667085;
+      }
+      @media (max-width:640px){
+        .queue-monitor-grid{
+          grid-template-columns:1fr;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  if (!els.statsPanel || document.getElementById('queueMonitorSection')) return;
+
+  const section = document.createElement('section');
+  section.className = 'section queue-monitor-section';
+  section.id = 'queueMonitorSection';
+  section.innerHTML = `
+    <div class="section-head">
+      <h2 class="section-title">주문 처리 상태</h2>
+      <div class="queue-monitor-actions">
+        <button class="status-pill" type="button" id="queueRefreshBtn">새로고침</button>
+        <button class="status-pill" type="button" id="queueRunBtn">재처리 실행</button>
+      </div>
+    </div>
+    <div class="queue-monitor-grid">
+      <article class="queue-monitor-card">
+        <strong id="queueOrderInboxCount">0</strong>
+        <span>주문 접수 대기</span>
+        <small id="queueOrderInboxMeta">PENDING 0 / RETRY 0</small>
+      </article>
+      <article class="queue-monitor-card">
+        <strong id="queueMirrorCount">0</strong>
+        <span>미러 반영 대기</span>
+        <small id="queueMirrorMeta">PENDING 0 / RETRY 0</small>
+      </article>
+      <article class="queue-monitor-card">
+        <strong id="queueShippingCount">0</strong>
+        <span>배송비 정리 대기</span>
+        <small id="queueShippingMeta">PENDING 0 / RETRY 0</small>
+      </article>
+    </div>
+    <div class="queue-monitor-foot" id="queueMonitorUpdatedAt">업데이트: -</div>
+  `;
+  els.statsPanel.insertAdjacentElement('afterend', section);
+
+  const queueEls = {
+    refreshBtn: section.querySelector('#queueRefreshBtn'),
+    runBtn: section.querySelector('#queueRunBtn'),
+    orderCount: section.querySelector('#queueOrderInboxCount'),
+    orderMeta: section.querySelector('#queueOrderInboxMeta'),
+    mirrorCount: section.querySelector('#queueMirrorCount'),
+    mirrorMeta: section.querySelector('#queueMirrorMeta'),
+    shippingCount: section.querySelector('#queueShippingCount'),
+    shippingMeta: section.querySelector('#queueShippingMeta'),
+    updatedAt: section.querySelector('#queueMonitorUpdatedAt')
+  };
+
+  let queueBusy = false;
+
+  function toQueueNumber(value) {
+    const num = Number(value || 0);
+    return Number.isFinite(num) ? num : 0;
+  }
+
+  function renderQueueCard(countEl, metaEl, info) {
+    const data = info || {};
+    const pending = toQueueNumber(data.pending);
+    const retry = toQueueNumber(data.retry);
+    countEl.textContent = String(pending + retry);
+    metaEl.textContent = 'PENDING ' + pending + ' / RETRY ' + retry;
+  }
+
+  function renderQueueStatus(data) {
+    const safe = readResponseSafe(data) || {};
+    renderQueueCard(queueEls.orderCount, queueEls.orderMeta, safe.orderInbox);
+    renderQueueCard(queueEls.mirrorCount, queueEls.mirrorMeta, safe.mirrorQueue);
+    renderQueueCard(queueEls.shippingCount, queueEls.shippingMeta, safe.shippingDirty);
+    queueEls.updatedAt.textContent = '업데이트: ' + String(safe.updatedAt || '-');
+  }
+
+  function setQueueButtonsDisabled(disabled) {
+    [queueEls.refreshBtn, queueEls.runBtn].forEach((btn) => {
+      if (!btn) return;
+      btn.disabled = !!disabled;
+    });
+  }
+
+  async function loadQueueStatus(showErrorToast) {
+    if (!apiReady()) return;
+    try {
+      const data = await jsonpRequest(API + '?type=queueStatus&_ts=' + Date.now());
+      renderQueueStatus(data);
+    } catch (error) {
+      if (showErrorToast) {
+        showToast(error && error.message ? error.message : '주문 처리 상태를 불러오지 못했습니다.');
+      }
+    }
+  }
+
+  async function runQueuesNow() {
+    if (queueBusy) return;
+    queueBusy = true;
+    setQueueButtonsDisabled(true);
+    try {
+      const result = await postJson({ type: 'runQueuesNow' });
+      if (result && result.ok === false) throw new Error(result.message || '재처리 실행 실패');
+      renderQueueStatus(result);
+      showSuccess('재처리를 실행했습니다', '주문 접수/미러/배송비 정리를 바로 실행했습니다.');
+    } catch (error) {
+      console.error(error);
+      showToast(error && error.message ? error.message : '재처리 실행 중 오류가 발생했습니다.');
+    } finally {
+      queueBusy = false;
+      setQueueButtonsDisabled(false);
+    }
+  }
+
+  if (queueEls.refreshBtn) {
+    queueEls.refreshBtn.addEventListener('click', () => {
+      loadQueueStatus(true).catch((error) => console.error(error));
+    });
+  }
+  if (queueEls.runBtn) {
+    queueEls.runBtn.addEventListener('click', () => {
+      runQueuesNow().catch((error) => console.error(error));
+    });
+  }
+
+  loadQueueStatus(false).catch((error) => console.error(error));
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      loadQueueStatus(false).catch((error) => console.error(error));
+    }
+  });
+  setInterval(() => {
+    if (!document.hidden) {
+      loadQueueStatus(false).catch((error) => console.error(error));
+    }
+  }, 30000);
+}
+
+applyApril09QueueMonitorPatch_();
 
 
 })();
